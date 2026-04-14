@@ -56,10 +56,15 @@ class AdminAboutUsController extends Controller
 
         return view('Admin.pages.about.create');
     }
-
+public function store(StoreAboutUsRequest $request): RedirectResponse
+    {
+        $this->aboutUsService->store($request->validated());
+        return Redirect::route('about.index')->with('success', __('messages.created_successfully'));
+    }
     // public function store(StoreAboutUsRequest $request): RedirectResponse
     // {
     //     $this->aboutUsService->store($request->validated());
     //     return Redirect::route('about.index')->with('success', __('messages.created_successfully'));
-    // }
+ 
+   // }
 }

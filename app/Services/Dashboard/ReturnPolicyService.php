@@ -24,7 +24,10 @@ class ReturnPolicyService
     }
 
     public function createIfNotExist()
-    {
+    {return ReturnPolicy::firstOrCreate([], [
+            'content_ar' => '',
+            'content_en' => ''
+        ]);
         return ReturnPolicy::firstOrCreate([]);
     }
 }

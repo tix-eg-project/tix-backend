@@ -103,6 +103,92 @@
                 <hr class="my-4">
                 @endforeach
 
+                @php
+                $featuresData = old('features', $product->features ?? []);
+                if (!is_array($featuresData)) {
+                $featuresData = [];
+                }
+
+                $faqRows = old('faqs');
+                if (!is_array($faqRows)) {
+                $faqRows = [];
+                foreach ($product->faqs as $faq) {
+                $faqRows[] = [
+                'question' => is_array($faq->question) ? $faq->question : [],
+                'answer' => is_array($faq->answer) ? $faq->answer : [],
+                ];
+                }
+                }
+                if (count($faqRows) === 0) {
+                $faqRows[] = ['question' => [], 'answer' => []];
+                }
+                @endphp
+
+                {{-- ====== المميزات الرئيسية (لكل لغة) ====== --}}
+                <div class="mb-4">
+                    <h5 class="mb-3">{{ __('messages.key_features') ?? 'Key features' }}</h5>
+                    <p class="text-muted small">{{ __('messages.key_features_hint') ?? 'One bullet per line for each language.' }}</p>
+
+                    @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
+                    @php
+                    $fl = $featuresData[$localeCode] ?? [];
+                    if (!is_array($fl)) {
+                    $fl = [];
+                    }
+                    $fl = array_values(array_filter(array_map(fn ($x) => trim((string) $x), $fl), fn ($x) => $x !== ''));
+                    if (count($fl) === 0) {
+                    $fl = [''];
+                    }
+                    @endphp
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ __('messages.key_features') ?? 'Key features' }} ({{ strtoupper($localeCode) }})</label>
+                        <div id="features-{{ $localeCode }}-wrap">
+                            @foreach ($fl as $line)
+                            <div class="input-group mb-2 feature-row">
+                                <input type="text" name="features[{{ $localeCode }}][]" class="form-control" value="{{ $line }}">
+                                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.feature-row').remove()" title="×">×</button>
+                            </div>
+                            @endforeach
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addFeatureRow('{{ $localeCode }}')">+ {{ __('messages.add_line') ?? 'Add line' }}</button>
+                    </div>
+                    @endforeach
+                    @error('features')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+
+                <hr class="my-4">
+
+                {{-- ====== الأسئلة الشائعة ====== --}}
+                <div class="mb-4">
+                    <h5 class="mb-3">{{ __('messages.faq') ?? 'FAQ' }}</h5>
+                    <div id="faq-container" data-next-index="{{ count($faqRows) }}">
+                        @foreach ($faqRows as $fi => $row)
+                        <div class="border rounded p-3 mb-3 faq-block">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold">{{ __('messages.faq') ?? 'FAQ' }} #{{ $fi + 1 }}</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.faq-block').remove()">{{ __('messages.remove') ?? 'Remove' }}</button>
+                            </div>
+                            @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">{{ __('messages.question') ?? 'Question' }} ({{ strtoupper($localeCode) }})</label>
+                                <input type="text" name="faqs[{{ $fi }}][question][{{ $localeCode }}]" class="form-control @error('faqs.'.$fi.'.question.'.$localeCode) is-invalid @enderror" value="{{ $row['question'][$localeCode] ?? '' }}">
+                                @error('faqs.'.$fi.'.question.'.$localeCode)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small mb-1">{{ __('messages.answer') ?? 'Answer' }} ({{ strtoupper($localeCode) }})</label>
+                                <textarea name="faqs[{{ $fi }}][answer][{{ $localeCode }}]" class="form-control @error('faqs.'.$fi.'.answer.'.$localeCode) is-invalid @enderror" rows="2">{{ $row['answer'][$localeCode] ?? '' }}</textarea>
+                                @error('faqs.'.$fi.'.answer.'.$localeCode)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            @endforeach
+                        </div>
+                        @endforeach
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFaqBlock()">+ {{ __('messages.add_faq') ?? 'Add FAQ' }}</button>
+                </div>
+
+                <hr class="my-4">
+
                 {{-- ====== السعر/الكمية/الخصم/النوع/الحالة ====== --}}
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -295,6 +381,59 @@
             resetSub();
         }
     });
+
+    const TIX_LOCALES = @json(array_keys(LaravelLocalization::getSupportedLocales()));
+    let faqNextIndex = {{ count($faqRows) }};
+
+    function addFeatureRow(locale) {
+        const wrap = document.getElementById('features-' + locale + '-wrap');
+        if (!wrap) return;
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 feature-row';
+        div.innerHTML = '<input type="text" class="form-control" name="features[' + locale + '][]" value="">' +
+            '<button type="button" class="btn btn-outline-danger" onclick="this.closest(\'.feature-row\').remove()">×</button>';
+        wrap.appendChild(div);
+    }
+
+    function addFaqBlock() {
+        const container = document.getElementById('faq-container');
+        if (!container) return;
+        const i = faqNextIndex++;
+        let html = '<div class="border rounded p-3 mb-3 faq-block">' +
+            '<div class="d-flex justify-content-between align-items-center mb-2">' +
+            '<span class="fw-semibold">{{ __('messages.faq') ?? 'FAQ' }} #' + (i + 1) + '</span>' +
+            '<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'.faq-block\').remove()">{{ __('messages.remove') ?? 'Remove' }}</button>' +
+            '</div>';
+        TIX_LOCALES.forEach(function(localeCode) {
+            const uc = String(localeCode).toUpperCase();
+            html += '<div class="mb-2"><label class="form-label small mb-1">{{ __('messages.question') ?? 'Question' }} (' + uc + ')</label>' +
+                '<input type="text" class="form-control" name="faqs[' + i + '][question][' + localeCode + ']"></div>';
+            html += '<div class="mb-3"><label class="form-label small mb-1">{{ __('messages.answer') ?? 'Answer' }} (' + uc + ')</label>' +
+                '<textarea class="form-control" rows="2" name="faqs[' + i + '][answer][' + localeCode + ']"></textarea></div>';
+        });
+        html += '</div>';
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    (function() {
+        const editForm = document.querySelector('.card-body form');
+        if (!editForm) return;
+        editForm.addEventListener('submit', function() {
+            const container = document.getElementById('faq-container');
+            if (!container || typeof TIX_LOCALES === 'undefined') return;
+            if (container.querySelectorAll('.faq-block').length === 0) {
+                TIX_LOCALES.forEach(function(localeCode) {
+                    ['question', 'answer'].forEach(function(field) {
+                        const inp = document.createElement('input');
+                        inp.type = 'hidden';
+                        inp.name = 'faqs[0][' + field + '][' + localeCode + ']';
+                        inp.value = '';
+                        container.appendChild(inp);
+                    });
+                });
+            }
+        });
+    })();
 
     function addImageInput() {
         const container = document.getElementById('image-container');

@@ -24,7 +24,10 @@ class PrivacyPolicyService
     }
 
     public function createIfNotExist()
-    {
+    {return PrivacyPolicy::firstOrCreate([], [
+            'content_ar' => '',
+            'content_en' => ''
+        ]);
         return PrivacyPolicy::firstOrCreate([]);
     }
 }

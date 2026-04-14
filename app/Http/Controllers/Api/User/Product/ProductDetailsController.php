@@ -18,6 +18,8 @@ class ProductDetailsController extends Controller
                 'subcategory.category',
                 'variants.values',
                 'variantItems',
+                'faqs',
+                'reviews' => fn ($q) => $q->with('user:id,name')->latest()->limit(30),
             ])
             ->find($id);
 

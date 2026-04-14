@@ -65,7 +65,7 @@
                                         @csrf
                                         <input type="hidden" name="status" value="{{ $vendor->status ? 0 : 1 }}">
                                         <button type="submit" class="btn btn-sm {{ $vendor->status ? 'btn-danger' : 'btn-success' }}">
-                                            {{ $vendor->status ? 'إيقاف' : 'تفعيل' }}
+  {{ $vendor->status ? __('messages.deactivate') : __('messages.activate') }}
                                         </button>
                                     </form>
                                 </td>

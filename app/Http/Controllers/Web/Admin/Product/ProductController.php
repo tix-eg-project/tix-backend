@@ -113,6 +113,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        $product->load('faqs');
         $locale = app()->getLocale();
         $categories    = Category::select('id', 'name')->orderBy("name->$locale")->get();
         $subcategories = Subcategory::select('id', 'name')->orderBy("name->$locale")->get();

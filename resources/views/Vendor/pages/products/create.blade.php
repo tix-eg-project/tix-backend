@@ -49,7 +49,7 @@
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.short_description') }} ({{ strtoupper($localeCode) }})</label>
                     <textarea name="short_description[{{ $localeCode }}]"
-                        class="form-control @error('short_description.'.$localeCode) is-invalid @enderror"
+                        class="form-control ckeditor-desc @error('short_description.'.$localeCode) is-invalid @enderror"
                         rows="3">{{ old('short_description.'.$localeCode) }}</textarea>
                     @error('short_description.'.$localeCode) <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
@@ -57,7 +57,7 @@
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.long_description') }} ({{ strtoupper($localeCode) }})</label>
                     <textarea name="long_description[{{ $localeCode }}]"
-                        class="form-control @error('long_description.'.$localeCode) is-invalid @enderror"
+                        class="form-control ckeditor-desc @error('long_description.'.$localeCode) is-invalid @enderror"
                         rows="5">{{ old('long_description.'.$localeCode) }}</textarea>
                     @error('long_description.'.$localeCode) <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
@@ -196,6 +196,18 @@
 </script>
 
 @push('scripts')
+<script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editors = document.querySelectorAll('.ckeditor-desc');
+        editors.forEach(editor => {
+            CKEDITOR.replace(editor, {
+                language: 'ar',
+                removePlugins: 'exportpdf',
+            });
+        });
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const $cat = $('#category_id');
@@ -217,16 +229,16 @@
                     const items = (res && res.data) ? res.data : [];
                     $sub.empty();
                     if (items.length) {
-                        $sub.append(`<option value="" disabled selected hidden>-- ${@json(__('messages.select_subcategory') ?? 'اختر القسم الفرعي')} --</option>`);
+                        $sub.append(`<option value="" disabled selected hidden>-- ${@json(__('messages.select_subcategory'))} --</option>`);
                         items.forEach(sc => $sub.append(`<option value="${sc.id}">${sc.name}</option>`));
                         if (preselectId) $sub.val(String(preselectId));
                         $sub.prop('disabled', false);
                     } else {
-                        resetSub(@json(__('messages.no_subcategories') ?? 'لا توجد أقسام فرعية'));
+                        resetSub(@json(__('messages.no_subcategories')));
                     }
                 },
                 error: function() {
-                    resetSub(@json(__('messages.load_failed') ?? 'فشل في التحميل'));
+                    resetSub(@json(__('messages.load_failed')));
                 }
             });
         }

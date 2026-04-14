@@ -28,12 +28,12 @@ class Order extends Model
         'status',
         'payment_status',
         'delivered_at',
-
+'cod_fee',
         'shipping_vsoft_city_id',    // [VSOFT]
         'shipping_vsoft_city_name',
     ];
 
-    protected $casts = [
+    protected $casts = ['cod_fee' => 'float',
         'subtotal' => 'float',
         'shipping_price' => 'float',
         'discount' => 'float',

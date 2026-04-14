@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\User\Privacy\TermsConditionsController;
 use App\Http\Controllers\Api\User\Product\AttributeDefinitionController;
 use App\Http\Controllers\Api\User\Product\ProductDetailsController;
 use App\Http\Controllers\Api\User\Product\ProductFilterController;
+use App\Http\Controllers\Api\User\Product\ProductReviewController;
 use App\Http\Controllers\Api\User\Product\ProductListController;
 use App\Http\Controllers\Api\User\Product\PublicProductController;
 use App\Http\Controllers\Api\User\Product\SearchController;
@@ -98,6 +99,7 @@ Route::middleware('locale')  // الآن بدون auth:sanctum
         Route::get('brands',                       [UserBrandController::class, 'index']);
         Route::get('products',                       [ProductListController::class, 'index']);
         Route::get('/products/{id}', [ProductDetailsController::class, 'show']);
+        Route::get('/products/{id}/reviews', [ProductReviewController::class, 'index']);
         Route::get('category/{category}/products',                       [ProductListController::class, 'productsByCategory']);
         Route::get('subcategory/{subcategory}/products',                       [ProductListController::class, 'productsBySubcategory']);
         Route::get('/product/discounted', [PublicProductController::class, 'discountedProducts']);
@@ -141,6 +143,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile',  [ProfileController::class, 'show']);
     Route::post('/profile',  [ProfileController::class, 'update']);
 
+
+    Route::post('/products/{id}/reviews', [ProductReviewController::class, 'store']);
 
     Route::post('favorites/toggle', [FavoriteController::class, 'toggle']);
     Route::get('favorites', [FavoriteController::class, 'index']);

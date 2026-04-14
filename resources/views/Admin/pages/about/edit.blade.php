@@ -27,14 +27,14 @@
 
             <div class="mb-3">
                 <label class="form-label">{{ __('messages.description_ar') }}</label>
-                <textarea name="description[ar]" class="form-control @error('description.ar') is-invalid @enderror"
+                <textarea name="description[ar]" class="form-control ckeditor-desc @error('description.ar') is-invalid @enderror"
                     rows="6">{{ old('description.ar', $about?->getTranslation('description','ar')) }}</textarea>
                 @error('description.ar') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
             </div>
 
             <div class="mb-3">
                 <label class="form-label">{{ __('messages.description_en') }}</label>
-                <textarea name="description[en]" class="form-control @error('description.en') is-invalid @enderror"
+                <textarea name="description[en]" class="form-control ckeditor-desc @error('description.en') is-invalid @enderror"
                     rows="6">{{ old('description.en', $about?->getTranslation('description','en')) }}</textarea>
                 @error('description.en') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
             </div>
@@ -55,4 +55,19 @@
 
     </div>
 </div>
+
+@push('scripts')
+<script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editors = document.querySelectorAll('.ckeditor-desc');
+        editors.forEach(editor => {
+            CKEDITOR.replace(editor, {
+                language: '{{ app()->getLocale() }}',
+                removePlugins: 'exportpdf',
+            });
+        });
+    });
+</script>
+@endpush
 @endsection

@@ -16,58 +16,43 @@
                 {{-- ====== الترجمات (اسم/وصف) ====== --}}
                 @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
                 @php
-                // Helpers لصفحة التعديل فقط:
-                // 1) getTransStrict => قيمة صريحة للّغة بدون fallback (value)
-                // 2) getFallbackHint => تلميح باستخدام fallback (placeholder فقط)
-                $getTransStrict = function($field) use ($localeCode, $product) {
-                // old() أولاً
-                $old = old("$field.$localeCode", null);
-                if (!is_null($old)) return $old;
+                    $getTransStrict = function($field) use ($localeCode, $product) {
+                        $old = old("$field.$localeCode", null);
+                        if (!is_null($old)) return $old;
+                        if (method_exists($product, 'getTranslation')) {
+                            $val = $product->getTranslation($field, $localeCode, false);
+                            if (!is_null($val) && $val !== '') return $val;
+                        }
+                        $val = $product->{$field};
+                        if (is_array($val) && array_key_exists($localeCode, $val)) {
+                            return $val[$localeCode] ?? '';
+                        }
+                        if (method_exists($product, 'getRawOriginal')) {
+                            $raw = $product->getRawOriginal($field);
+                            if (is_string($raw) && $raw !== '') {
+                                $arr = json_decode($raw, true);
+                                if (is_array($arr) && array_key_exists($localeCode, $arr)) {
+                                    return $arr[$localeCode] ?? '';
+                                }
+                            }
+                        }
+                        return '';
+                    };
 
-                // Spatie بدون fallback
-                if (method_exists($product, 'getTranslation')) {
-                $val = $product->getTranslation($field, $localeCode, false);
-                if (!is_null($val) && $val !== '') return $val;
-                }
-
-                // Cast/Array صريح
-                $val = $product->{$field};
-                if (is_array($val) && array_key_exists($localeCode, $val)) {
-                return $val[$localeCode] ?? '';
-                }
-
-                // JSON خام صريح
-                if (method_exists($product, 'getRawOriginal')) {
-                $raw = $product->getRawOriginal($field);
-                if (is_string($raw) && $raw !== '') {
-                $arr = json_decode($raw, true);
-                if (is_array($arr) && array_key_exists($localeCode, $arr)) {
-                return $arr[$localeCode] ?? '';
-                }
-                }
-                }
-
-                // لا توجد ترجمة لهذه اللغة
-                return '';
-                };
-
-                $getFallbackHint = function($field) use ($localeCode, $product) {
-                // استخدم Spatie بالـ fallback كـ تلميح فقط
-                if (method_exists($product, 'getTranslation')) {
-                $hint = $product->getTranslation($field, $localeCode, true);
-                if (!is_null($hint) && $hint !== '') return $hint;
-                // محاولة على fallback_locale صراحةً
-                try {
-                $fallbackLocale = config('app.fallback_locale');
-                if ($fallbackLocale) {
-                $hint2 = $product->getTranslation($field, $fallbackLocale, true);
-                if (!is_null($hint2) && $hint2 !== '') return $hint2;
-                }
-                } catch (\Throwable $e) {}
-                }
-                // في غياب Spatie، حاول نص اللغة الحالية لو متاح
-                return is_string($product->{$field} ?? null) ? $product->{$field} : '';
-                };
+                    $getFallbackHint = function($field) use ($localeCode, $product) {
+                        if (method_exists($product, 'getTranslation')) {
+                            $hint = $product->getTranslation($field, $localeCode, true);
+                            if (!is_null($hint) && $hint !== '') return $hint;
+                            try {
+                                $fallbackLocale = config('app.fallback_locale');
+                                if ($fallbackLocale) {
+                                    $hint2 = $product->getTranslation($field, $fallbackLocale, true);
+                                    if (!is_null($hint2) && $hint2 !== '') return $hint2;
+                                }
+                            } catch (\Throwable $e) {}
+                        }
+                        return is_string($product->{$field} ?? null) ? $product->{$field} : '';
+                    };
                 @endphp
 
                 <div class="row g-3">
@@ -84,7 +69,7 @@
                     <div class="col-12">
                         <label class="form-label">{{ __('messages.short_description') }} ({{ strtoupper($localeCode) }})</label>
                         <textarea name="short_description[{{ $localeCode }}]"
-                            class="form-control @error('short_description.'.$localeCode) is-invalid @enderror"
+                            class="form-control ckeditor-desc @error('short_description.'.$localeCode) is-invalid @enderror"
                             rows="3"
                             placeholder="{{ $getTransStrict('short_description') === '' ? ($getFallbackHint('short_description') ?? '') : '' }}">{{ $getTransStrict('short_description') }}</textarea>
                         @error('short_description.'.$localeCode) <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -93,7 +78,7 @@
                     <div class="col-12">
                         <label class="form-label">{{ __('messages.long_description') }} ({{ strtoupper($localeCode) }})</label>
                         <textarea name="long_description[{{ $localeCode }}]"
-                            class="form-control @error('long_description.'.$localeCode) is-invalid @enderror"
+                            class="form-control ckeditor-desc @error('long_description.'.$localeCode) is-invalid @enderror"
                             rows="5"
                             placeholder="{{ $getTransStrict('long_description') === '' ? ($getFallbackHint('long_description') ?? '') : '' }}">{{ $getTransStrict('long_description') }}</textarea>
                         @error('long_description.'.$localeCode) <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -103,7 +88,7 @@
                 <hr class="my-4">
                 @endforeach
 
-                {{-- ====== السعر/الكمية/الخصم/النوع/الحالة ====== --}}
+                {{-- ====== السعر / الكمية / الخصم / النوع / الحالة ====== --}}
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">{{ __('messages.price') }}</label>
@@ -188,7 +173,7 @@
                     </div>
                 </div>
 
-                {{-- صور جديدة --}}
+                {{-- ====== صور جديدة ====== --}}
                 <div class="mb-3 mt-3">
                     <label class="form-label">{{ __('messages.add_images') ?? 'Add Images' }}</label>
                     <div id="image-container">
@@ -202,21 +187,21 @@
                     </small>
                 </div>
 
-                {{-- عرض الصور الحالية (تحت حقل إضافة صور فقط) --}}
+                {{-- ====== الصور الحالية ====== --}}
                 @php
-                $currentUrls = [];
-                if (isset($product->image_urls) && is_array($product->image_urls)) {
-                $currentUrls = $product->image_urls;
-                } else {
-                $stored = (array)($product->images ?? []);
-                foreach ($stored as $path) {
-                if (is_string($path) && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
-                $currentUrls[] = $path;
-                } else {
-                $currentUrls[] = asset('storage/'.ltrim($path ?? '', '/'));
-                }
-                }
-                }
+                    $currentUrls = [];
+                    if (isset($product->image_urls) && is_array($product->image_urls)) {
+                        $currentUrls = $product->image_urls;
+                    } else {
+                        $stored = (array)($product->images ?? []);
+                        foreach ($stored as $path) {
+                            if (is_string($path) && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+                                $currentUrls[] = $path;
+                            } else {
+                                $currentUrls[] = asset('storage/'.ltrim($path ?? '', '/'));
+                            }
+                        }
+                    }
                 @endphp
 
                 @if(count($currentUrls))
@@ -230,40 +215,174 @@
                 </div>
                 @endif
 
+                {{-- ====== المميزات الرئيسية ====== --}}
+                @php
+                    $existingFeatures = [];
+                    if (!empty($product->features)) {
+                        $raw = $product->features;
+                        if (is_string($raw)) {
+                            $decoded = json_decode($raw, true);
+                            $existingFeatures = is_array($decoded) ? $decoded : [];
+                        } elseif (is_array($raw)) {
+                            $existingFeatures = $raw;
+                        }
+                    }
+                @endphp
+
+                <div class="card mt-4">
+                    <div class="card-header bg-light fw-bold">
+                        {{ __('messages.features') ?? 'المميزات الرئيسية' }}
+                    </div>
+                    <div class="card-body" id="features-container">
+                        @forelse ($existingFeatures as $index => $feature)
+                        <div class="row g-2 mb-2 feature-row">
+                            <div class="col-md-5">
+                                <input type="text"
+                                    name="features[{{ $index }}][key]"
+                                    class="form-control"
+                                    placeholder="{{ __('messages.feature_key') ?? 'مثال: الوزن' }}"
+                                    value="{{ old('features.'.$index.'.key', $feature['key'] ?? '') }}">
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text"
+                                    name="features[{{ $index }}][value]"
+                                    class="form-control"
+                                    placeholder="{{ __('messages.feature_value') ?? 'مثال: 1.5 كيلو' }}"
+                                    value="{{ old('features.'.$index.'.value', $feature['value'] ?? '') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger w-100" onclick="removeRow(this)">×</button>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="row g-2 mb-2 feature-row">
+                            <div class="col-md-5">
+                                <input type="text" name="features[0][key]" class="form-control"
+                                    placeholder="{{ __('messages.feature_key') ?? 'مثال: الوزن' }}">
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="features[0][value]" class="form-control"
+                                    placeholder="{{ __('messages.feature_value') ?? 'مثال: 1.5 كيلو' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger w-100" onclick="removeRow(this)">×</button>
+                            </div>
+                        </div>
+                        @endforelse
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-success btn-sm" onclick="addFeatureRow()">
+                            + {{ __('messages.add_feature') ?? 'إضافة ميزة' }}
+                        </button>
+                    </div>
+                </div>
+
+                {{-- ====== الأسئلة الشائعة (FAQ) ====== --}}
+                @php
+                    $existingFaqs = old('faqs') !== null
+                        ? old('faqs', [])
+                        : ($product->faqs ?? collect())->toArray();
+                    $faqCount = count($existingFaqs);
+                @endphp
+
+                <div class="card mt-4">
+                    <div class="card-header bg-light fw-bold">
+                        {{ __('messages.faqs') ?? 'الأسئلة الشائعة' }}
+                    </div>
+                    <div class="card-body" id="faqs-container">
+                        @forelse ($existingFaqs as $fi => $faq)
+                        <div class="faq-row border rounded p-3 mb-3 bg-light">
+                            <div class="mb-2">
+                                <label class="form-label small text-muted">{{ __('messages.question') ?? 'السؤال' }}</label>
+                                <input type="text"
+                                    name="faqs[{{ $fi }}][question]"
+                                    class="form-control"
+                                    placeholder="{{ __('messages.faq_question_placeholder') ?? 'مثال: هل المنتج يدعم الشحن السريع؟' }}"
+                                    value="{{ is_array($faq) ? ($faq['question'] ?? '') : ($faq->question ?? '') }}">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small text-muted">{{ __('messages.answer') ?? 'الجواب' }}</label>
+                                <textarea
+                                    name="faqs[{{ $fi }}][answer]"
+                                    class="form-control"
+                                    rows="2"
+                                    placeholder="{{ __('messages.faq_answer_placeholder') ?? 'مثال: نعم، يدعم شحن 65 واط...' }}">{{ is_array($faq) ? ($faq['answer'] ?? '') : ($faq->answer ?? '') }}</textarea>
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this.closest('.faq-row'))">
+                                {{ __('messages.remove') ?? 'حذف' }}
+                            </button>
+                        </div>
+                        @empty
+                        <div class="faq-row border rounded p-3 mb-3 bg-light">
+                            <div class="mb-2">
+                                <label class="form-label small text-muted">{{ __('messages.question') ?? 'السؤال' }}</label>
+                                <input type="text" name="faqs[0][question]" class="form-control"
+                                    placeholder="{{ __('messages.faq_question_placeholder') ?? 'مثال: هل المنتج يدعم الشحن السريع؟' }}">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small text-muted">{{ __('messages.answer') ?? 'الجواب' }}</label>
+                                <textarea name="faqs[0][answer]" class="form-control" rows="2"
+                                    placeholder="{{ __('messages.faq_answer_placeholder') ?? 'مثال: نعم، يدعم شحن 65 واط...' }}"></textarea>
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this.closest('.faq-row'))">
+                                {{ __('messages.remove') ?? 'حذف' }}
+                            </button>
+                        </div>
+                        @endforelse
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-success btn-sm" onclick="addFaqRow()">
+                            + {{ __('messages.add_faq') ?? 'إضافة سؤال' }}
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">{{ __('messages.save') ?? 'Save' }}</button>
                     <a href="{{ route('vendor.products.index') }}" class="btn btn-secondary">{{ __('messages.Back') ?? 'Back' }}</a>
                 </div>
-            </form>
 
+            </form>
         </div>
     </div>
 </div>
 
 @push('scripts')
+<script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        // ====== CKEditor ======
+        const editors = document.querySelectorAll('.ckeditor-desc');
+        editors.forEach(function (editor) {
+            CKEDITOR.replace(editor, {
+                language: 'ar',
+                removePlugins: 'exportpdf',
+            });
+        });
+
+        // ====== Category / Subcategory AJAX ======
         const $cat = $('#category_id');
         const $sub = $('#subcategory_id');
 
-        function resetSub(msg = '') {
+        function resetSub(msg) {
             $sub.prop('disabled', true).empty()
                 .append(`<option value="">${msg || '{{ __('messages.select_subcategory') ?? __('messages.select') }}'}</option>`);
         }
 
-        function loadSubs(categoryId, preselectId = null) {
+        function loadSubs(categoryId, preselectId) {
             resetSub('{{ __("messages.loading") ?? "تحميل..." }}');
             if (!categoryId) return;
-
             $.ajax({
                 url: `/api/category/${categoryId}/subcategories`,
                 method: 'GET',
-                success: function(res) {
+                success: function (res) {
                     const items = (res && res.data) ? res.data : [];
                     $sub.empty();
                     if (items.length) {
                         $sub.append('<option value="" disabled selected hidden>-- {{ __("messages.select_subcategory") ?? "اختر القسم الفرعي" }} --</option>');
-                        items.forEach(function(sc) {
+                        items.forEach(function (sc) {
                             $sub.append(`<option value="${sc.id}">${sc.name}</option>`);
                         });
                         if (preselectId) $sub.val(String(preselectId));
@@ -272,22 +391,18 @@
                         resetSub('{{ __("messages.no_subcategories") ?? "لا توجد أقسام فرعية" }}');
                     }
                 },
-                error: function() {
+                error: function () {
                     resetSub('{{ __("messages.load_failed") ?? "فشل في التحميل" }}');
                 }
             });
         }
 
-        $cat.on('change', function() {
-            const catId = this.value;
-            loadSubs(catId, null);
+        $cat.on('change', function () {
+            loadSubs(this.value, null);
         });
 
-        // تهيئة مبدئية: لو فيه قيمة قديمة/حالية
-        const initialCat = '{{ old('
-        category_id ', $product->category_id) }}';
-        const initialSub = '{{ old('
-        subcategory_id ', $product->subcategory_id) }}';
+        const initialCat = '{{ old('category_id', $product->category_id) }}';
+        const initialSub = '{{ old('subcategory_id', $product->subcategory_id) }}';
         if (initialCat) {
             $cat.val(String(initialCat));
             loadSubs(initialCat, initialSub || null);
@@ -296,26 +411,77 @@
         }
     });
 
+    // ====== Images ======
     function addImageInput() {
         const container = document.getElementById('image-container');
         const div = document.createElement('div');
         div.classList.add('input-group', 'mb-2');
-
         const input = document.createElement('input');
         input.type = 'file';
         input.name = 'images[]';
         input.classList.add('form-control');
         input.accept = '.jpg,.jpeg,.png,.gif,.webp';
-
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.classList.add('btn', 'btn-danger');
         removeBtn.innerText = '×';
-        removeBtn.onclick = () => container.removeChild(div);
-
+        removeBtn.onclick = () => div.remove();
         div.appendChild(input);
         div.appendChild(removeBtn);
         container.appendChild(div);
+    }
+
+    // ====== Features ======
+    let featureIndex = {{ count($existingFeatures) > 0 ? count($existingFeatures) : 1 }};
+
+    function addFeatureRow() {
+        const container = document.getElementById('features-container');
+        const row = document.createElement('div');
+        row.classList.add('row', 'g-2', 'mb-2', 'feature-row');
+        row.innerHTML = `
+            <div class="col-md-5">
+                <input type="text" name="features[${featureIndex}][key]" class="form-control"
+                    placeholder="{{ __('messages.feature_key') ?? 'مثال: الوزن' }}">
+            </div>
+            <div class="col-md-5">
+                <input type="text" name="features[${featureIndex}][value]" class="form-control"
+                    placeholder="{{ __('messages.feature_value') ?? 'مثال: 1.5 كيلو' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger w-100" onclick="removeRow(this)">×</button>
+            </div>`;
+        container.appendChild(row);
+        featureIndex++;
+    }
+
+    // ====== FAQs ======
+    let faqIndex = {{ $faqCount > 0 ? $faqCount : 1 }};
+
+    function addFaqRow() {
+        const container = document.getElementById('faqs-container');
+        const row = document.createElement('div');
+        row.classList.add('faq-row', 'border', 'rounded', 'p-3', 'mb-3', 'bg-light');
+        row.innerHTML = `
+            <div class="mb-2">
+                <label class="form-label small text-muted">{{ __('messages.question') ?? 'السؤال' }}</label>
+                <input type="text" name="faqs[${faqIndex}][question]" class="form-control"
+                    placeholder="{{ __('messages.faq_question_placeholder') ?? 'مثال: هل المنتج يدعم الشحن السريع؟' }}">
+            </div>
+            <div class="mb-2">
+                <label class="form-label small text-muted">{{ __('messages.answer') ?? 'الجواب' }}</label>
+                <textarea name="faqs[${faqIndex}][answer]" class="form-control" rows="2"
+                    placeholder="{{ __('messages.faq_answer_placeholder') ?? 'مثال: نعم، يدعم شحن 65 واط...' }}"></textarea>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this.closest('.faq-row'))">
+                {{ __('messages.remove') ?? 'حذف' }}
+            </button>`;
+        container.appendChild(row);
+        faqIndex++;
+    }
+
+    // ====== Shared Remove ======
+    function removeRow(el) {
+        el.remove();
     }
 </script>
 @endpush

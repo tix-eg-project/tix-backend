@@ -94,8 +94,14 @@ class CheckoutService
         $discount      = (float) ($summaryRaw['discount'] ?? 0);
         $shippingArr   = is_array($summaryRaw['shipping_zone'] ?? null) ? $summaryRaw['shipping_zone'] : [];
         $shippingPrice = (float) ($shippingArr['price'] ?? ($shippingZone->price ?? 0));
-        $total         = (float) ($summaryRaw['total'] ?? max(0, $subtotal - $discount) + $shippingPrice);
-
+$codFee = 0.0;
+        $paymentMethod = $this->resolvePaymentMethod($paymentMethodId, $paymentMethodName);
+        $isCod = $this->isCashOnDelivery($paymentMethod);
+        
+        if ($isCod) {
+            $codFee = 9.0;
+        }
+        $total = (float) ($summaryRaw['total'] ?? max(0, $subtotal - $discount) + $shippingPrice + $codFee);
         $couponArr = is_array($summaryRaw['coupon'] ?? null) ? $summaryRaw['coupon'] : [];
         $couponData = [
             'code'   => $couponArr['code'] ?? null,
@@ -106,9 +112,9 @@ class CheckoutService
 
         $contact = UserContact::where('user_id', Auth::id())->first();
 
-        $isCod = $this->isCashOnDelivery($paymentMethod);
+   
 
-        return DB::transaction(function () use ($cart, $subtotal, $discount, $shippingPrice, $total, $paymentMethod, $shippingZone, $contact, $couponData, $isCod) {
+        return DB::transaction(function () use ($cart, $subtotal, $discount, $shippingPrice, $codFee, $total, $paymentMethod, $shippingZone, $contact, $couponData, $isCod) {
             $order = null;
             if (!$isCod) {
                 $order = $this->findReusablePendingOrder($cart);
@@ -118,6 +124,7 @@ class CheckoutService
                 $order->update([
                     'subtotal'            => $subtotal,
                     'shipping_price'      => $shippingPrice,
+                    'cod_fee'             => $codFee,
                     'discount'            => $discount,
                     'total'               => $total,
                     'payment_method_id'   => $paymentMethod->id,
@@ -135,6 +142,7 @@ class CheckoutService
                     cart: $cart,
                     subtotal: $subtotal,
                     shippingPrice: $shippingPrice,
+                    codFee: $codFee,
                     discount: $discount,
                     total: $total,
                     paymentMethod: $paymentMethod,
@@ -164,7 +172,7 @@ class CheckoutService
                 'redirect_url'      => !$isCod ? ($paymentData['iframe_url'] ?? null) : null,
                 'payment_reference' => $paymentData['reference'] ?? ($order->order_number ?? ('ORD-' . $order->id)),
             ];
-        });
+        });     
     }
 
     protected function resolvePaymentMethod(?int $id, ?string $name): PaymentMethod
@@ -212,6 +220,7 @@ class CheckoutService
         Cart $cart,
         float $subtotal,
         float $shippingPrice,
+        float $codFee,
         float $discount,
         float $total,
         PaymentMethod $paymentMethod,
@@ -230,6 +239,7 @@ class CheckoutService
             'cart_id' => $cart->id,
             'subtotal' => $subtotal,
             'shipping_price' => $shippingPrice,
+            'cod_fee' => $codFee,
             'discount' => $discount,
             'total' => $total,
             'shipping_zone_id' => $shippingZone->id,
@@ -278,11 +288,13 @@ class CheckoutService
 
     protected function updateInventory(Cart $cart): void
     {
-        $items = CartItem::with('product')->where('cart_id', $cart->id)->get();
-
+$items = CartItem::with(['product', 'variantItem'])->where('cart_id', $cart->id)->get();
         foreach ($items as $item) {
             if ($item->product) {
                 $item->product->decrement('quantity', (int) $item->quantity);
+            }
+            if ($item->variantItem) {
+                $item->variantItem->decrement('quantity', (int) $item->quantity);
             }
         }
     }

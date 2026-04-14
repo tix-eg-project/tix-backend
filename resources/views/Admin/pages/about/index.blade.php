@@ -42,12 +42,12 @@
                     </h5>
                 </div>
 
-                <div class="mb-3">
+              <div class="mb-3">
                     <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
                         {{ __('messages.description') }}
                     </span>
-                    <div class="mt-2 text-body" style="white-space: pre-wrap; line-height: 1.8;">
-                        {{ $about->getTranslation('description', app()->getLocale()) ?: '—' }}
+                    <div class="mt-2 text-body" style="line-height: 1.8;">
+                        {!! $about->getTranslation('description', app()->getLocale()) ?: '—' !!}
                     </div>
                 </div>
 

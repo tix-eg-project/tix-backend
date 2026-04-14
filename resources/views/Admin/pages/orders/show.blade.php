@@ -16,8 +16,9 @@ $statusClass = $statusColors[$order->status] ?? 'bg-secondary-subtle text-second
 // ملخص مالي معتمد على حقول الأوردر
 $subtotal = (float) ($order->subtotal ?? 0);
 $shipping = (float) ($order->shipping_price ?? 0);
+$codFee = (float) ($order->cod_fee ?? 0);
 $couponAmount = (float) ($order->coupon_amount ?? 0);
-$finalTotal = (float) ($order->total ?? ($subtotal + $shipping - $couponAmount));
+$finalTotal = (float) ($order->total ?? ($subtotal + $shipping + $codFee - $couponAmount));
 @endphp
 
 <div class="row g-4">
@@ -77,6 +78,14 @@ $finalTotal = (float) ($order->total ?? ($subtotal + $shipping - $couponAmount))
                     <div class="fs-5 fw-semibold mt-1">{{ number_format($shipping, 2) }} {{ __('messages.currency') }}</div>
                 </div>
             </div>
+            @if($codFee > 0)
+            <div class="col-md-3">
+                <div class="p-3 rounded-4 border bg-white h-100">
+                    <div class="text-muted small">{{ __('messages.cod_fee') }}</div>
+                    <div class="fs-5 fw-semibold mt-1">{{ number_format($codFee, 2) }} {{ __('messages.currency') }}</div>
+                </div>
+            </div>
+            @endif
             <div class="col-md-3">
                 <div class="p-3 rounded-4 border bg-white h-100">
                     <div class="text-muted small">{{ __('messages.final_total') }}</div>

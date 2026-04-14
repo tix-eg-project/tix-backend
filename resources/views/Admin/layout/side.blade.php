@@ -65,10 +65,9 @@
     // لديك حالياً shipping_index / shipping_update فقط؛ الأفضل إنشاء shipping_zones_index
     ['label'=>__('messages.Shipping Zones'), 'icon'=>'bx bx-navigation', 'route'=>'admin.shipping_zones.index', 'active'=>$is('admin.shipping_zones.*'), 'permission'=>'shipping_zones_index'],// مفقودة: أضفها (مؤقتاً ممكن تربطها بـ shipping_index)
 
-    ['label'=>__('messages.Vsoft_cities'), 'icon'=>'bx bxs-error', 'route'=>'admin.vsoft-cities.index', 'active'=>$is('admin.damaged-stocks.*')],
+    ['label'=>__('messages.Vsoft_cities'), 'icon'=>'bx bxs-error', 'route'=>'admin.vsoft-cities.index', 'active'=>$is('admin.vsoft-cities.*'), 'permission'=>'vsoft_cities_index'],
     ['label'=>__('messages.Orders'), 'icon'=>'bx bx-receipt', 'route'=>'admin.orders.index', 'active'=>$is('admin.orders.*'), 'permission'=>'orders_index'],
-    ['label' => __('messages.Returns'), 'icon' => 'bx bx-rotate-left', 'route' => 'admin.returns.index', 'active' => $is('admin.returns.*')],
-
+    ['label' => __('messages.Returns'), 'icon' => 'bx bx-rotate-left', 'route' => 'admin.returns.index', 'active' => $is('admin.returns.*'), 'permission'=>'returns_index'],
     ['label'=>__('messages.damaged_stocks'), 'icon'=>'bx bxs-error', 'route'=>'admin.damaged-stocks.index', 'active'=>$is('admin.damaged-stocks.*')],
 
     ['label'=>__('messages.My Profile'), 'icon'=>'fa-solid fa-user', 'route'=>'admin.profile', 'active'=>$is('admin.profile'), 'permission'=>null],

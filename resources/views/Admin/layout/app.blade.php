@@ -65,3 +65,8 @@
 
 
 </html>
+<style>
+    .cke_notifications_area{
+        display: none !important;
+    }
+</style>

@@ -24,7 +24,10 @@ class TermsConditionsService
     }
 
     public function createIfNotExist()
-    {
+    {return TermsPolicies::firstOrCreate([], [
+            'content_ar' => '',
+            'content_en' => ''
+        ]);
         return TermsPolicies::firstOrCreate([]);
     }
 }

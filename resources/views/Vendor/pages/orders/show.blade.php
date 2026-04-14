@@ -18,8 +18,9 @@
 
         $subtotal = (float) ($order->subtotal ?? 0);
         $shipping = (float) ($order->shipping_price ?? 0);
+        $codFee = (float) ($order->cod_fee ?? 0);
         $couponAmount = (float) ($order->coupon_amount ?? 0);
-        $finalTotal = (float) ($order->total ?? ($subtotal + $shipping - $couponAmount));
+        $finalTotal = (float) ($order->total ?? ($subtotal + $shipping + $codFee - $couponAmount));
         $itemsSubtotal = $order->items->sum(fn($i) => (float)$i->price_after * (int)$i->quantity);
         @endphp
 
@@ -84,6 +85,14 @@
                             <div class="fs-5 fw-semibold mt-1">{{ number_format($shipping, 2) }} {{ __('messages.currency') }}</div>
                         </div>
                     </div>
+                    @if($codFee > 0)
+                    <div class="col-md-3">
+                        <div class="p-3 rounded-4 border bg-white h-100">
+                            <div class="text-muted small">{{ __('messages.cod_fee') }}</div>
+                            <div class="fs-5 fw-semibold mt-1">{{ number_format($codFee, 2) }} {{ __('messages.currency') }}</div>
+                        </div>
+                    </div>
+                    @endif
                     <div class="col-md-3">
                         <div class="p-3 rounded-4 border bg-white h-100">
                             <div class="text-muted small">{{ __('messages.final_total') }}</div>
@@ -97,7 +106,7 @@
                     {{ __('messages.items_subtotal') }}:
                     {{ number_format($itemsSubtotal, 2) }} {{ __('messages.currency') }}
                     — {{ __('messages.calculated_total') }}:
-                    {{ number_format($subtotal + $shipping - $couponAmount, 2) }} {{ __('messages.currency') }}
+                    {{ number_format($subtotal + $shipping + $codFee - $couponAmount, 2) }} {{ __('messages.currency') }}
                 </div>
             </div>
         </div>

@@ -13,7 +13,7 @@
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <title>تسجيل الدخول للمتجر</title>
+    <title>{{ __('messages.vendor_login_title') }}</title>
 
     <!-- Favicon (اختياري) -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
@@ -55,14 +55,14 @@
                         </div>
 
                         <!-- عنوان -->
-                        <h4 class="mb-2 text-center">تسجيل الدخول للتاجر</h4>
+                        <h4 class="mb-2 text-center">{{ __('messages.vendor_login_title') }}</h4>
 
                         <!-- فورم تسجيل الدخول — نفس الداتا ونفس route -->
                         <form id="formAuthentication" class="mb-3" method="POST" action="{{ route('vendor.login') }}">
                             @csrf
 
                             <div class="mb-3">
-                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                <label for="email" class="form-label">{{ __('messages.email') }}</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="bx bx-user"></i></span>
                                     <input
@@ -70,7 +70,7 @@
                                         class="form-control"
                                         id="email"
                                         name="email"
-                                        placeholder="ادخل البريد الإلكتروني"
+                                        placeholder="{{ __('messages.email_placeholder') }}"
                                         value="{{ old('email') }}"
                                         required
                                         autofocus />
@@ -78,7 +78,7 @@
                             </div>
 
                             <div class="mb-3 form-password-toggle">
-                                <label class="form-label" for="password">كلمة المرور</label>
+                                <label class="form-label" for="password">{{ __('messages.password') }}</label>
                                 <div class="input-group input-group-merge">
                                     <input
                                         type="password"
@@ -100,7 +100,7 @@
                             </div>
                             @endif
 
-                            <button class="btn btn-primary d-grid w-100" type="submit">تسجيل الدخول</button>
+                            <button class="btn btn-primary d-grid w-100" type="submit">{{ __('messages.login_title') }}</button>
                         </form>
                         <!-- /فورم -->
 

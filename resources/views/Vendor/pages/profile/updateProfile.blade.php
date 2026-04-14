@@ -1,7 +1,7 @@
 {{-- resources/views/Vendor/pages/profile/updateProfile.blade.php --}}
 @extends('Vendor.layout.app')
 
-@section('title', 'تعديل البروفايل')
+@section('title', __('messages.edit_profile'))
 
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -24,8 +24,8 @@
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">تعديل البروفايل</h5>
-                    <a href="{{ route('vendor.dashboard') }}" class="btn btn-sm btn-outline-secondary">رجوع للداشبورد</a>
+                    <h5 class="mb-0">{{ __('messages.edit_profile') }}</h5>
+                    <a href="{{ route('vendor.dashboard') }}" class="btn btn-sm btn-outline-secondary">{{ __('messages.back_to_dashboard') }}</a>
                 </div>
 
                 <div class="card-body">
@@ -34,7 +34,7 @@
 
                         {{-- اسم صاحب الشركة --}}
                         <div class="mb-3">
-                            <label class="form-label">اسم صاحب الشركة</label>
+                            <label class="form-label">{{ __('messages.company_owner_name') }}</label>
                             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
                                 value="{{ old('name', $vendor->name) }}" required>
                             @error('name') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -42,22 +42,22 @@
 
                         {{-- الوصف --}}
                         <div class="mb-3">
-                            <label class="form-label">الوصف</label>
+                            <label class="form-label">{{ __('messages.description') }}</label>
                             <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="4">{{ old('description', $vendor->description) }}</textarea>
                             @error('description') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
                         {{-- ✳️ كلمة المرور الجديدة (اختياري) --}}
                         <div class="mb-3">
-                            <label class="form-label">كلمة المرور الجديدة (اختياري)</label>
+                            <label class="form-label">{{ __('messages.new_password_optional') }}</label>
                             <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="••••••••">
-                            <small class="text-muted d-block mt-1">اتركها فارغة إذا لا تريد تغيير كلمة المرور.</small>
+                            <small class="text-muted d-block mt-1">{{ __('messages.leave_blank_if_no_change') }}</small>
                             @error('password') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
                         {{-- الصورة --}}
                         <div class="mb-3">
-                            <label class="form-label d-block">الصورة الشخصية</label>
+                            <label class="form-label d-block">{{ __('messages.personal_image') }}</label>
 
                             @if($vendor->image)
                             <div class="mb-2">
@@ -68,13 +68,13 @@
                             @endif
 
                             <input type="file" id="imageInput" name="image" class="form-control @error('image') is-invalid @enderror" accept="image/*">
-                            <small class="text-muted d-block mt-1">حد أقصى 4MB — الامتدادات: jpeg, png, jpg, gif, webp</small>
+                            <small class="text-muted d-block mt-1">{{ __('messages.max_size_allowed_4mb') }}</small>
                             @error('image') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="d-flex gap-2">
-                            <a href="{{ route('vendor.dashboard') }}" class="btn btn-outline-secondary">رجوع</a>
-                            <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                            <a href="{{ route('vendor.dashboard') }}" class="btn btn-outline-secondary">{{ __('messages.Back') }}</a>
+                            <button type="submit" class="btn btn-primary">{{ __('messages.save_changes') }}</button>
                         </div>
                     </form>
                 </div>

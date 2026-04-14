@@ -17,7 +17,7 @@ class UpdateAboutUsRequest extends FormRequest
             'description.ar'      => ['required', 'string'],
             'description.en'      => ['required', 'string'],
 
-            'image'               => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'image'               => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
     }
 

@@ -283,6 +283,8 @@ Route::group([
 
         Route::prefix('about')->name('about.')->group(function () {
             Route::get('/', [AdminAboutUsController::class, 'index'])->name('index');
+            Route::get('/create', [AdminAboutUsController::class, 'create'])->name('create');
+            Route::post('/store', [AdminAboutUsController::class, 'store'])->name('store');
             Route::get('/edit', [AdminAboutUsController::class, 'edit'])->name('edit');
             Route::put('/update', [AdminAboutUsController::class, 'update'])->name('update');
         });

@@ -21,23 +21,21 @@ class AboutUsService
         return $this->save($data);
     }
 
-    private function save(array $data): AboutUs
+  private function save(array $data): AboutUs
     {
         return DB::transaction(function () use ($data) {
             $payload = Arr::only($data, ['title', 'description']);
 
             $before = AboutUs::first();
-            $about  = AboutUs::updateOrCreate([], $payload);
-
+            
             if (!empty($data['image'])) {
                 if (!empty($before?->image)) {
                     $this->images->deleteImage($before->image);
                 }
-                $path = $this->images->uploadImage('aboutus', $data['image']);
-                $about->update(['image' => $path]);
+                $payload['image'] = $this->images->uploadImage('aboutus', $data['image']);
             }
 
-            return $about;
+            return AboutUs::updateOrCreate([], $payload);
         });
     }
 }

@@ -46,6 +46,20 @@ class UpdateProductRequest extends FormRequest
 
             // الحالة
             'status'        => 'sometimes',
+
+            // مميزات المنتج (لكل لغة قائمة أسطر)
+            'features'           => 'sometimes|array',
+            'features.*'         => 'sometimes|array',
+            'features.*.*'       => 'nullable|string|max:500',
+
+            // أسئلة شائعة (سؤال/جواب JSON لكل لغة)
+            'faqs'               => 'sometimes|array',
+            'faqs.*.question'    => 'sometimes|array',
+            'faqs.*.question.ar' => 'nullable|string|max:2000',
+            'faqs.*.question.en' => 'nullable|string|max:2000',
+            'faqs.*.answer'      => 'sometimes|array',
+            'faqs.*.answer.ar'   => 'nullable|string',
+            'faqs.*.answer.en'   => 'nullable|string',
         ];
     }
 

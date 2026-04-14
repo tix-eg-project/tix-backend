@@ -37,7 +37,8 @@ class Product extends Model
         'brand_id',
         'vendor_id',
         'subcategory_id',
-        'status'
+        'status',
+        'features',
     ];
 
 
@@ -45,6 +46,7 @@ class Product extends Model
         'name' => 'array',
         'short_description' => 'array',
         'long_description' => 'array',
+        'features' => 'array',
         'images'  => 'array',
         'price'    => 'float',
         'discount' => 'float',
@@ -206,6 +208,16 @@ class Product extends Model
     public function variantItems()
     {
         return $this->hasMany(ProductVariantItem::class, 'product_id');
+    }
+
+    public function faqs(): HasMany
+    {
+        return $this->hasMany(ProductFaq::class)->orderBy('id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class)->orderByDesc('id');
     }
 
     public function comments()

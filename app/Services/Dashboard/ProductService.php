@@ -18,6 +18,59 @@ class ProductService
         $this->imageManger = $imageManger;
     }
 
+    private function normalizeFeaturesPayload(?array $features): array
+    {
+        if ($features === null) {
+            return [];
+        }
+        $clean = [];
+        foreach ($features as $locale => $lines) {
+            if (!is_array($lines)) {
+                continue;
+            }
+            $clean[$locale] = array_values(array_filter(
+                array_map(static fn ($x) => trim((string) $x), $lines),
+                static fn ($x) => $x !== ''
+            ));
+        }
+
+        return $clean;
+    }
+
+    private function syncProductFaqs(Product $product, array $faqsRows): void
+    {
+        $product->faqs()->delete();
+        foreach ($faqsRows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $question = is_array($row['question'] ?? null) ? $row['question'] : [];
+            $answer = is_array($row['answer'] ?? null) ? $row['answer'] : [];
+            $nonEmpty = false;
+            foreach ($question as $v) {
+                if (trim((string) $v) !== '') {
+                    $nonEmpty = true;
+                    break;
+                }
+            }
+            if (!$nonEmpty) {
+                foreach ($answer as $v) {
+                    if (trim((string) $v) !== '') {
+                        $nonEmpty = true;
+                        break;
+                    }
+                }
+            }
+            if (!$nonEmpty) {
+                continue;
+            }
+            $product->faqs()->create([
+                'question' => $question,
+                'answer' => $answer,
+            ]);
+        }
+    }
+
     /** في سياق الفندور فقط (route name يبدأ بـ vendor.) */
     private function vendorContextId(): ?int
     {
@@ -53,7 +106,17 @@ class ProductService
             'status'            => $data['status'] ?? Status::Active,
         ];
 
-        return Product::create($payload);
+        if (array_key_exists('features', $data)) {
+            $payload['features'] = $this->normalizeFeaturesPayload((array) $data['features']);
+        }
+
+        $product = Product::create($payload);
+
+        if (array_key_exists('faqs', $data)) {
+            $this->syncProductFaqs($product, (array) $data['faqs']);
+        }
+
+        return $product->refresh();
     }
 
     public function update(Product $product, array $data): Product
@@ -98,7 +161,15 @@ class ProductService
             'status'            => $data['status']            ?? $product->status,
         ];
 
+        if (array_key_exists('features', $data)) {
+            $payload['features'] = $this->normalizeFeaturesPayload((array) $data['features']);
+        }
+
         $product->update($payload);
+
+        if (array_key_exists('faqs', $data)) {
+            $this->syncProductFaqs($product, (array) $data['faqs']);
+        }
 
         return $product->refresh();
     }

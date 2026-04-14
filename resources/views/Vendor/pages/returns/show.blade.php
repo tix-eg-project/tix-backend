@@ -124,13 +124,12 @@
     // ترجمات سريعة/دفع
     $t = function(string $key, string $fallback) { $v = __($key); return $v === $key ? $fallback : $v; };
     $currency = $order->currency_code ?? $order->currency ?? config('app.currency') ?? 'EGP';
-    $orderStatusText = $order?->status_label ?? ($order?->delivered_at ? $t('messages.delivered','تم التوصيل') : $t('messages.order_status_processing','قيد التجهيز'));
+    $orderStatusText = $order?->status_label ?? ($order?->delivered_at ? __('messages.delivered') : __('messages.order_status_processing'));
     $pmRaw = $order->payment_method ?? $order->payment_method_name ?? $order->payment_method_title ?? $order->payment ?? $order->pay_method ?? $order->payment_type ?? null;
     $pmKey = is_string($pmRaw) ? strtolower(trim($pmRaw)) : null;
     $pmLabel = match (true) {
-        $pmKey && (str_contains($pmKey, 'cod') || str_contains($pmKey, 'cash')) => 'Cash on Delivery',
-        $pmKey && str_contains($pmKey, 'wallet') => $t('messages.wallet','محفظة'),
-        $pmKey && (str_contains($pmKey, 'card') || str_contains($pmKey, 'visa') || str_contains($pmKey, 'master') || str_contains($pmKey, 'stripe')) => $t('messages.card','بطاقة'),
+        $pmKey && str_contains($pmKey, 'wallet') => __('messages.wallet'),
+        $pmKey && (str_contains($pmKey, 'card') || str_contains($pmKey, 'visa') || str_contains($pmKey, 'master') || str_contains($pmKey, 'stripe')) => __('messages.card'),
         default => $pmRaw ?: '-',
     };
     $couponCode = null;
@@ -168,24 +167,24 @@
         <div class="col-12 col-xl-6">
             <div class="card rounded-4 border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">{{ $t('messages.order_info','Order Info') }}</h5>
+                    <h5 class="mb-3">{{ __('messages.order_info') }}</h5>
                     <dl class="row mb-0">
-                        <dt class="col-5">{{ $t('messages.status','الحالة') }}</dt>
+                        <dt class="col-5">{{ __('messages.status') }}</dt>
                         <dd class="col-7">{{ $orderStatusText }}</dd>
 
-                        <dt class="col-5">{{ $t('messages.order_id','Order ID') }}</dt>
+                        <dt class="col-5">{{ __('messages.order_id') }}</dt>
                         <dd class="col-7">#{{ $order?->id ?? '-' }}</dd>
 
-                        <dt class="col-5">{{ $t('messages.payment_method','طريقة الدفع') }}</dt>
+                        <dt class="col-5">{{ __('messages.payment_method') }}</dt>
                         <dd class="col-7">{{ $pmLabel ?: '-' }}</dd>
 
-                        <dt class="col-5">{{ $t('messages.coupon','كوبون') }}</dt>
+                        <dt class="col-5">{{ __('messages.coupon') }}</dt>
                         <dd class="col-7">{{ $couponCode ?: '-' }}</dd>
 
-                        <dt class="col-5">{{ $t('messages.created_at','Created At') }}</dt>
+                        <dt class="col-5">{{ __('messages.created_at') }}</dt>
                         <dd class="col-7">{{ optional($order?->created_at)->format('Y-m-d') ?? '-' }}</dd>
 
-                        <dt class="col-5">{{ $t('messages.delivered_at','Delivery Date') }}</dt>
+                        <dt class="col-5">{{ __('messages.delivered_at') }}</dt>
                         <dd class="col-7">{{ optional($order?->delivered_at)->format('Y-m-d') ?? '-' }}</dd>
                     </dl>
                 </div>
@@ -195,15 +194,15 @@
         <div class="col-12 col-xl-6">
             <div class="card rounded-4 border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">{{ $t('messages.order_summary','Order Summary') }}</h5>
+                    <h5 class="mb-3">{{ __('messages.order_summary') }}</h5>
                     <dl class="row mb-0">
-                        <dt class="col-6">{{ $t('messages.subtotal','Subtotal') }}</dt>
+                        <dt class="col-6">{{ __('messages.subtotal') }}</dt>
                         <dd class="col-6 text-end">{{ is_numeric($orderSubtotal) ? number_format($orderSubtotal,2).' '.$currency : '-' }}</dd>
 
-                        <dt class="col-6">{{ $t('messages.shipping','Shipping') }}</dt>
+                        <dt class="col-6">{{ __('messages.shipping') }}</dt>
                         <dd class="col-6 text-end">{{ number_format($orderShipping ?? 0, 2).' '.$currency }}</dd>
 
-                        <dt class="col-6 fw-bold">{{ $t('messages.final_total','Final Total') }}</dt>
+                        <dt class="col-6 fw-bold">{{ __('messages.final_total') }}</dt>
                         <dd class="col-6 text-end fw-bold">{{ is_numeric($orderTotal) ? number_format($orderTotal,2).' '.$currency : '-' }}</dd>
                     </dl>
                 </div>

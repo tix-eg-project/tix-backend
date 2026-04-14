@@ -217,6 +217,10 @@ class ProductDetailsResource extends JsonResource
             'primary_variant'   => $primary,
             'groups'            => $groups,
 
+            'features' => $this->featureLinesForLocale(app()->getLocale()),
+            'faqs'     => $this->faqsForLocale(app()->getLocale()),
+            'reviews'  => $this->reviewsPayload(),
+
             'vendor' => [
                 'id'          => optional($this->vendor)->id,
                 'store_name'  => optional($this->vendor)->company_name
@@ -228,6 +232,82 @@ class ProductDetailsResource extends JsonResource
 
 
             // 'variant_items'   => $variantItems,
+        ];
+    }
+
+    private function featureLinesForLocale(string $locale): array
+    {
+        $raw = $this->features ?? null;
+        if (!is_array($raw)) {
+            return [];
+        }
+        if (isset($raw[$locale]) && is_array($raw[$locale])) {
+            return array_values(array_filter(
+                array_map(static fn ($x) => trim((string) $x), $raw[$locale]),
+                static fn ($x) => $x !== ''
+            ));
+        }
+        $keys = array_keys($raw);
+        if ($keys !== [] && is_int($keys[0])) {
+            return array_values(array_filter(
+                array_map(static fn ($x) => trim((string) $x), $raw),
+                static fn ($x) => $x !== ''
+            ));
+        }
+
+        return [];
+    }
+
+    private function faqsForLocale(string $locale): array
+    {
+        if (!$this->relationLoaded('faqs')) {
+            $this->loadMissing('faqs');
+        }
+
+        return $this->faqs->map(function ($f) use ($locale) {
+            $q = $f->question ?? [];
+            $a = $f->answer ?? [];
+            $qOut = is_array($q)
+                ? (string) ($q[$locale] ?? ($q['ar'] ?? $q['en'] ?? ''))
+                : (string) $q;
+            $aOut = is_array($a)
+                ? (string) ($a[$locale] ?? ($a['ar'] ?? $a['en'] ?? ''))
+                : (string) $a;
+
+            return [
+                'id' => $f->id,
+                'question' => $qOut,
+                'answer' => $aOut,
+            ];
+        })->values()->all();
+    }
+
+    private function reviewsPayload(): array
+    {
+        if (!$this->relationLoaded('reviews')) {
+            $this->load([
+                'reviews' => fn ($q) => $q->with('user:id,name')->latest()->limit(30),
+            ]);
+        } else {
+            $this->loadMissing('reviews.user');
+        }
+
+        $data = $this->reviews->map(function ($r) {
+            return [
+                'id' => $r->id,
+                'rating' => (int) $r->rating,
+                'review' => $r->review,
+                'user_name' => $r->user->name ?? null,
+                'created_at' => $r->created_at?->toIso8601String(),
+            ];
+        })->values()->all();
+
+        $avg = $this->resource->reviews()->avg('rating');
+
+        return [
+            'data' => $data,
+            'average_rating' => $avg !== null ? round((float) $avg, 1) : null,
+            'count' => (int) $this->resource->reviews()->count(),
         ];
     }
 }
