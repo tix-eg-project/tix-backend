@@ -9,11 +9,11 @@ export default class FlasherPlugin extends AbstractPlugin {
     renderOptions(options: Options): void;
     private createContainer;
     private addToContainer;
-    addProgressBar(notification: HTMLElement, { timeout, fps }: {
-        timeout: number;
-        fps: number;
-    }): void;
+    private normalizeTimeout;
+    private addTimer;
     private removeNotification;
     private stringToHTML;
     private escapeHtml;
+    private dispatchClickEvents;
+    private getThemeName;
 }

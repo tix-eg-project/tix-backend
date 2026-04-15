@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flasher\Prime\Storage\Filter;
 
+use Flasher\Prime\Notification\Envelope;
 use Flasher\Prime\Storage\Filter\Criteria\CriteriaInterface;
 
 final class Filter implements FilterInterface
@@ -13,6 +14,11 @@ final class Filter implements FilterInterface
      */
     private array $criteriaChain = [];
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         foreach ($this->criteriaChain as $criteria) {

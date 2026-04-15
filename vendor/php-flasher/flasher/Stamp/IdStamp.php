@@ -10,38 +10,24 @@ final readonly class IdStamp implements PresentableStampInterface, StampInterfac
 {
     private string $id;
 
-    /**
-     * Constructs an IdStamp with a unique identifier.
-     *
-     * @param string|null $id The identifier. If not provided, a unique identifier is generated.
-     */
     public function __construct(?string $id = null)
     {
         $this->id = $id ?? $this->generateUniqueId();
     }
 
-    /**
-     * Generates a unique identifier.
-     *
-     * @return string the generated unique identifier
-     */
     private function generateUniqueId(): string
     {
         try {
             return bin2hex(random_bytes(16));
-        } catch (\Exception) {
-            // Handle the exception or fallback to another method of ID generation
-            // For example, using uniqid() as a fallback
+        } catch (\Random\RandomException) {
             return uniqid('', true);
         }
     }
 
     /**
-     * Indexes an array of envelopes by their ID.
+     * @param Envelope[] $envelopes
      *
-     * @param Envelope[] $envelopes an array of envelopes to index
-     *
-     * @return array<string, Envelope> an associative array of envelopes indexed by their ID
+     * @return array<string, Envelope>
      */
     public static function indexById(array $envelopes): array
     {
@@ -62,20 +48,13 @@ final readonly class IdStamp implements PresentableStampInterface, StampInterfac
         return $map;
     }
 
-    /**
-     * Gets the identifier.
-     *
-     * @return string the identifier
-     */
     public function getId(): string
     {
         return $this->id;
     }
 
     /**
-     * Converts the stamp to an array.
-     *
-     * @return array{id: string} an associative array with the identifier
+     * @return array{id: string}
      */
     public function toArray(): array
     {

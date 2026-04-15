@@ -7,9 +7,7 @@ namespace Flasher\Prime\Translation\Language;
 final readonly class Russian
 {
     /**
-     * Russian translations.
-     *
-     * @return array<string, string> array of message keys and their Russian translations
+     * @return array<string, string>
      */
     public static function translations(): array
     {

@@ -43,10 +43,10 @@ The package offers the following:
  4.1.x        | 0.13.x
  4.2.x        | 0.15.x
  5.0.x/5.1.x  | 1.0.x
- 5.2.x-5.4.x (PHP 7 not required)  | 1.2.
+ 5.2.x-5.4.x (PHP 7 not required)  | 1.2.x
  5.2.0-6.x (PHP version >= 7 required) | 1.4.x
  6.x-10.x (PHP version >= 7 required) | 1.8.x
- 10.x-12.x (PHP version >= 8.2 required) | 2.0.x
+ 10.x-13.x (PHP version >= 8.2 required) | 2.0.x
 
 ## Installation
 
@@ -496,49 +496,64 @@ Be sure to pass the locale and the attributes as parameters to the closure. You 
 
 ## Caching routes
 
-To cache your routes, use:
+> [!CAUTION]
+> By default, this package is not compatible with Laravel’s route caching.
+> Running commands such as `php artisan route:cache` or `php artisan optimize` will cause localized routes to return 404 errors.
 
-``` bash
+To enable route caching for your localized routes, you may use the `LoadsTranslatedCachedRoutes` trait provided by this package.
+Depending on your Laravel version, you will need to apply the trait differently:
+
+**Before Laravel 11**    
+If your application includes a `RouteServiceProvider`, add the `LoadsTranslatedCachedRoutes` trait to it:
+
+```php
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Mcamara\LaravelLocalization\Traits\LoadsTranslatedCachedRoutes;
+
+class RouteServiceProvider extends ServiceProvider
+{
+    use LoadsTranslatedCachedRoutes;
+}
+```
+
+**After Laravel 11**    
+For Laravel 11 and newer, add the `LoadsTranslatedCachedRoutes` trait to your `AppServiceProvider`, and register the cached routes within the boot method:
+
+```php
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider;
+use Illuminate\Support\ServiceProvider;
+use Mcamara\LaravelLocalization\Traits\LoadsTranslatedCachedRoutes;
+
+class AppServiceProvider extends ServiceProvider
+{
+    use LoadsTranslatedCachedRoutes;
+
+    public function boot(): void
+    {
+        RouteServiceProvider::loadCachedRoutesUsing(fn () => $this->loadCachedRoutes());
+
+        // ...
+    }
+}
+```
+
+Once configured, use the following command to cache your localized routes instead of `php artisan route:cache`:
+```bash
 php artisan route:trans:cache
 ```
 
-... instead of the normal `route:cache` command. Using `artisan route:cache` will **not** work correctly!
-
-For the route caching solution to work, it is required to make a minor adjustment to your application route provision.
-
-**before laravel 11** 
-
-In your App's `RouteServiceProvider`, use the `LoadsTranslatedCachedRoutes` trait:
-
-```php
-<?php
-class RouteServiceProvider extends ServiceProvider
-{
-    use \Mcamara\LaravelLocalization\Traits\LoadsTranslatedCachedRoutes;
+To clear the localized route cache, use:
+```bash
+php artisan route:trans:clear
 ```
 
-**after laravel 11** 
+To get a list of routes for a given locale, use:
+```bash
+php artisan route:trans:list {locale}
 
-In your App's `AppServiceProvider`, use the `CachedTranslatedRouteLoader` class in register method:
-
-```php
-<?php
-class AppServiceProvider extends ServiceProvider
-{  
-    use \Mcamara\LaravelLocalization\Traits\LoadsTranslatedCachedRoutes;
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        RouteServiceProvider::loadCachedRoutesUsing(fn() => $this->loadCachedRoutes());
-        ...
-    }   
+# Example:
+php artisan route:trans:list en
 ```
-
-
-
-For more details see [here](CACHING.md).
 
 ## Common Issues
 
@@ -586,32 +601,77 @@ To localize your post url see the example in [POST is not working](#post-is-not-
 
 ## Testing
 
-During the test setup, the called route is not yet known. This means no language can be set.
-When a request is made during a test, this results in a 404 - without the prefix set the localized route does not seem to exist.
+In a typical request lifecycle, your application is bootstrapped automatically — allowing this package to detect the active route and set the appropriate locale.
+However, when running tests, the application is bootstrapped before any request is made. As a result, the package can’t determine the current route, which often leads to a `404` error.
 
-To fix this, you can use this function to manually set the language prefix:
+To handle this, you can manually define the locale prefix in your tests by refreshing the application with a specific locale:
+
+### PHPUnit
 ```php
-// TestCase.php
-protected function refreshApplicationWithLocale($locale)
-{
-    self::tearDown();
-    putenv(LaravelLocalization::ENV_ROUTE_KEY . '=' . $locale);
-    self::setUp();
-}
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Mcamara\LaravelLocalization\LaravelLocalization;
 
-protected function tearDown(): void
+abstract class TestCase extends BaseTestCase
 {
-    putenv(LaravelLocalization::ENV_ROUTE_KEY);
-    parent::tearDown();
-}
+    protected function refreshApplicationWithLocale(string $locale): void
+    {
+        self::tearDown();
+        putenv(LaravelLocalization::ENV_ROUTE_KEY . '=' . $locale);
+        self::setUp();
+    }
 
-// YourTest.php
-public function testBasicTest()
-{
-    $this->refreshApplicationWithLocale('en');
-    // Testing code
+    protected function tearDown(): void
+    {
+        putenv(LaravelLocalization::ENV_ROUTE_KEY);
+        parent::tearDown();
+    }
 }
 ```
+
+```php
+final class HomeControllerTest extends TestCase
+{
+    public function it_can_visit_the_home_page()
+    {
+        $this->refreshApplicationWithLocale('en');
+
+        $response = $this->get('/en');
+
+        $response->assertStatus(200);
+    }
+}
+```
+
+### Pest
+```php
+// Pest.php
+use Mcamara\LaravelLocalization\LaravelLocalization;
+
+function refreshApplicationWithLocale(string $locale): void
+{
+    /** @var \Tests\TestCase $test */
+    $test = test();
+
+    $test->tearDown();
+    putenv(LaravelLocalization::ENV_ROUTE_KEY . '=' . $locale);
+    $test->setUp();
+}
+
+pest()->afterEach(function () {
+    putenv(LaravelLocalization::ENV_ROUTE_KEY);
+});
+```
+```php
+// YourTest.php
+test('it can visit the home page', function () {
+    refreshApplicationWithLocale('en');
+
+    $response = $this->get('/en');
+
+    $response->assertStatus(200);
+});
+```
+
 
 ## Collaborators
 - [Adam Nielsen (iwasherefirst2)](https://github.com/iwasherefirst2)

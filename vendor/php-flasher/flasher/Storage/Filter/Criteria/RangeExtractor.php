@@ -7,14 +7,9 @@ namespace Flasher\Prime\Storage\Filter\Criteria;
 trait RangeExtractor
 {
     /**
-     * Extracts a range from the given criteria.
+     * @return array{min: ?int, max: ?int}
      *
-     * @param string $name     the name of the criteria
-     * @param mixed  $criteria the criteria value
-     *
-     * @return array{min: ?int, max: ?int} an associative array with 'min' and 'max' keys
-     *
-     * @throws \InvalidArgumentException if the criteria is not of an expected type
+     * @throws \InvalidArgumentException
      */
     private function extractRange(string $name, mixed $criteria): array
     {

@@ -50,9 +50,6 @@ final readonly class RequestExtension implements RequestExtensionInterface
         return $flatMapping;
     }
 
-    /**
-     * Process the request and flash messages.
-     */
     private function processRequest(RequestInterface $request): void
     {
         foreach ($this->mapping as $alias => $type) {

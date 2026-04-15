@@ -8,6 +8,7 @@ namespace Flasher\Prime;
  * @phpstan-type ConfigType array{
  *     default: string,
  *     main_script?: string,
+ *     public_path?: string,
  *     scripts?: string[],
  *     styles?: string[],
  *     inject_assets?: bool,
@@ -20,45 +21,21 @@ namespace Flasher\Prime;
  *         type: string,
  *         title: string,
  *         message: string,
- *         options: array<string, mixed>,
+ *         options: array<string, mixed>
  *     }>,
  *     plugins?: array<string, array{
  *         scripts?: string[],
  *         styles?: string[],
- *         options?: array<string, mixed>,
- *     }>,
+ *         options?: array<string, mixed>
+ *     }>
  * }
  */
 final class Configuration
 {
     /**
-     * @param array{
-     *      default: string,
-     *      main_script?: string,
-     *      scripts?: string[],
-     *      styles?: string[],
-     *      inject_assets?: bool,
-     *      translate?: bool,
-     *      excluded_paths?: list<non-empty-string>,
-     *      options?: array<string, mixed>,
-     *      filter?: array<string, mixed>,
-     *      flash_bag?: false|array<string, string[]>,
-     *      presets?: array<string, array{
-     *          type: string,
-     *          title: string,
-     *          message: string,
-     *          options: array<string, mixed>,
-     *      }>,
-     *      plugins?: array<string, array{
-     *          scripts?: string[],
-     *          styles?: string[],
-     *          options?: array<string, mixed>,
-     *      }>,
-     *  } $config
-     *
      * @phpstan-param ConfigType $config
      *
-     * @return ConfigType
+     * @phpstan-return ConfigType
      */
     public static function from(array $config): array
     {

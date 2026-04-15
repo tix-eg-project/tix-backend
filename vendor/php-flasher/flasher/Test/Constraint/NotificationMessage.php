@@ -8,9 +8,6 @@ use Flasher\Prime\EventDispatcher\Event\NotificationEvents;
 use Flasher\Prime\Notification\NotificationInterface;
 use PHPUnit\Framework\Constraint\Constraint;
 
-/**
- * Validates that at least one notification contains a specific message.
- */
 final class NotificationMessage extends Constraint
 {
     public function __construct(private readonly string $expectedMessage)
@@ -37,8 +34,12 @@ final class NotificationMessage extends Constraint
         return false;
     }
 
+    /**
+     * @param NotificationEvents $other
+     */
     protected function failureDescription(mixed $other): string
     {
+        // @phpstan-ignore-next-line
         if (!$other instanceof NotificationEvents) {
             return 'Expected an instance of NotificationEvents but received a different type.';
         }

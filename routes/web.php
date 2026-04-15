@@ -66,30 +66,6 @@ use App\Http\Controllers\Api\User\Payment\XPayCallbackController;
 use App\Http\Controllers\Api\User\Payment\PaymentRollbackController;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Route::group([
     'prefix' => LaravelLocalization::setLocale(),
     'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']

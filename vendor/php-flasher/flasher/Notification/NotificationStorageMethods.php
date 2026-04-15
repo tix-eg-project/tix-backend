@@ -11,26 +11,41 @@ trait NotificationStorageMethods
 {
     protected readonly StorageManagerInterface $storageManager;
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function success(string $message, array $options = [], ?string $title = null): Envelope
     {
         return $this->flash(Type::SUCCESS, $message, $options, $title);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function error(string $message, array $options = [], ?string $title = null): Envelope
     {
         return $this->flash(Type::ERROR, $message, $options, $title);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function info(string $message, array $options = [], ?string $title = null): Envelope
     {
         return $this->flash(Type::INFO, $message, $options, $title);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function warning(string $message, array $options = [], ?string $title = null): Envelope
     {
         return $this->flash(Type::WARNING, $message, $options, $title);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function flash(?string $type = null, ?string $message = null, array $options = [], ?string $title = null): Envelope
     {
         if (null !== $type) {
@@ -52,11 +67,25 @@ trait NotificationStorageMethods
         return $this->push();
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function preset(string $preset, array $parameters = []): Envelope
     {
         $this->envelope->withStamp(new PresetStamp($preset, $parameters));
 
         return $this->push();
+    }
+
+    public function operation(string $operation, string|object|null $resource = null): Envelope
+    {
+        $resource = match (true) {
+            \is_string($resource) => $resource,
+            \is_object($resource) => $this->resolveResourceName($resource),
+            default => null,
+        };
+
+        return $this->preset($operation, [':resource' => $resource ?: 'resource']);
     }
 
     public function created(string|object|null $resource = null): Envelope
@@ -79,17 +108,6 @@ trait NotificationStorageMethods
         return $this->operation('deleted', $resource);
     }
 
-    public function operation(string $operation, string|object|null $resource = null): Envelope
-    {
-        $resource = match (true) {
-            \is_string($resource) => $resource,
-            \is_object($resource) => $this->resolveResourceName($resource),
-            default => null,
-        };
-
-        return $this->preset($operation, [':resource' => $resource ?: 'resource']);
-    }
-
     public function push(): Envelope
     {
         $envelope = $this->getEnvelope();
@@ -99,7 +117,7 @@ trait NotificationStorageMethods
         return $envelope;
     }
 
-    private function resolveResourceName(object $object): ?string
+    private function resolveResourceName(object $object): string
     {
         $displayName = \is_callable([$object, 'getFlashIdentifier']) ? $object->getFlashIdentifier() : null;
 

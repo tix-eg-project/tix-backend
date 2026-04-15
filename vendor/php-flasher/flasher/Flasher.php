@@ -11,11 +11,14 @@ use Flasher\Prime\Response\ResponseManagerInterface;
 use Flasher\Prime\Storage\StorageManagerInterface;
 use Flasher\Prime\Support\Traits\ForwardsCalls;
 
+/**
+ * @mixin \Flasher\Prime\Notification\NotificationBuilder
+ */
 final readonly class Flasher implements FlasherInterface
 {
     use ForwardsCalls;
 
-    public const VERSION = '2.1.6';
+    public const VERSION = '2.6.1';
 
     public function __construct(
         private string $default,
@@ -45,14 +48,16 @@ final readonly class Flasher implements FlasherInterface
         return $this->use($alias);
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     * @param array<string, mixed> $context
+     */
     public function render(string $presenter = 'html', array $criteria = [], array $context = []): mixed
     {
         return $this->responseManager->render($presenter, $criteria, $context);
     }
 
     /**
-     * Dynamically call the default factory instance.
-     *
      * @param mixed[] $parameters
      */
     public function __call(string $method, array $parameters): mixed

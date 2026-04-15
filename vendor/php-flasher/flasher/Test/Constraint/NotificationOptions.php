@@ -7,13 +7,10 @@ namespace Flasher\Prime\Test\Constraint;
 use Flasher\Prime\EventDispatcher\Event\NotificationEvents;
 use PHPUnit\Framework\Constraint\Constraint;
 
-/**
- * Asserts that at least one notification contains a set of options.
- */
 final class NotificationOptions extends Constraint
 {
     /**
-     * @param array<string, mixed> $expectedOptions the expected options
+     * @param array<string, mixed> $expectedOptions
      */
     public function __construct(private readonly array $expectedOptions)
     {
@@ -42,6 +39,7 @@ final class NotificationOptions extends Constraint
     protected function failureDescription(mixed $other): string
     {
         $actualOptions = [];
+
         if ($other instanceof NotificationEvents) {
             foreach ($other->getEnvelopes() as $notification) {
                 $actualOptions[] = json_encode($notification->getOptions());

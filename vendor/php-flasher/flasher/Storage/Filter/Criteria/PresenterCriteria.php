@@ -11,6 +11,9 @@ final class PresenterCriteria implements CriteriaInterface
 {
     private string $presenter;
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(mixed $criteria)
     {
         if (!\is_string($criteria)) {
@@ -20,6 +23,11 @@ final class PresenterCriteria implements CriteriaInterface
         $this->presenter = $criteria;
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         return array_filter($envelopes, function (Envelope $envelope) {

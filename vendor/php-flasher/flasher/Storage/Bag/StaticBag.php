@@ -13,11 +13,17 @@ final class StaticBag implements BagInterface
      */
     private static array $envelopes = [];
 
+    /**
+     * @return Envelope[]
+     */
     public function get(): array
     {
         return self::$envelopes;
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     */
     public function set(array $envelopes): void
     {
         self::$envelopes = $envelopes;

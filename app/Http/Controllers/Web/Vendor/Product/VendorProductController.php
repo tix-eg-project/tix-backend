@@ -103,6 +103,8 @@ class VendorProductController extends Controller
     {
         $this->assertVendorOwns($product);
 
+        $product->load(['faqs', 'reviews.user', 'comments.user']);
+
         $locale = app()->getLocale();
         $categories    = Category::select('id', 'name')->orderBy("name->$locale")->get();
         $subcategories = Subcategory::select('id', 'name')->orderBy("name->$locale")->get();

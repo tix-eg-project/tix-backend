@@ -4,34 +4,48 @@ declare(strict_types=1);
 
 use Flasher\Prime\Configuration;
 
+/*
+ * Default PHPFlasher configuration for Laravel.
+ *
+ * This configuration file defines the default settings for PHPFlasher when
+ * used within a Laravel application. It uses the Configuration class from
+ * the core PHPFlasher library to establish type-safe configuration.
+ *
+ * @return array<string, mixed> PHPFlasher configuration
+ */
 return Configuration::from([
-    // Default notification library (e.g., 'flasher', 'toastr', 'noty', 'notyf', 'sweetalert')
+    // Default notification adapter
     'default' => 'flasher',
 
-    // Path to the main PHPFlasher JavaScript file
+    // Main script path
     'main_script' => '/vendor/flasher/flasher.min.js',
 
-    // List of CSS files to style your notifications
+    // Prefix prepended to every flasher asset URL. Useful when the app is
+    // served from a subdirectory (e.g. '/app') or a separate asset host
+    // (e.g. 'https://cdn.example.com'). Leave empty when mounted at the root.
+    'public_path' => '',
+
+    // Stylesheet files
     'styles' => [
         '/vendor/flasher/flasher.min.css',
     ],
 
-    // Set global options for all notifications (optional)
+    // Global notification options
     // 'options' => [
-    //     'timeout' => 5000, // Time in milliseconds before the notification disappears
-    //     'position' => 'top-right', // Where the notification appears on the screen
+    //     'timeout' => 5000,
+    //     'position' => 'top-right',
     // ],
 
-    // Automatically inject JavaScript and CSS assets into your HTML pages
+    // Auto-inject assets into responses
     'inject_assets' => true,
 
-    // Enable message translation using Laravel's translation service
+    // Enable automatic message translation
     'translate' => true,
 
-    // URL patterns to exclude from asset injection and flash_bag conversion
+    // URL patterns to exclude from asset injection and flash bag conversion
     'excluded_paths' => [],
 
-    // Map Laravel flash message keys to notification types
+    // Map Laravel session flash keys to notification types
     'flash_bag' => [
         'success' => ['success'],
         'error' => ['error', 'danger'],
@@ -39,12 +53,12 @@ return Configuration::from([
         'info' => ['info', 'notice', 'alert'],
     ],
 
-    // Set criteria to filter which notifications are displayed (optional)
+    // Filter criteria for notifications
     // 'filter' => [
-    //     'limit' => 5, // Maximum number of notifications to show at once
+    //     'limit' => 5,
     // ],
 
-    // Define notification presets to simplify notification creation (optional)
+    // Predefined notification configurations
     // 'presets' => [
     //     'entity_saved' => [
     //         'type' => 'success',

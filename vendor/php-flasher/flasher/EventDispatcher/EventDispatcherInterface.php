@@ -9,7 +9,7 @@ use Flasher\Prime\EventDispatcher\EventListener\EventListenerInterface;
 interface EventDispatcherInterface
 {
     /**
-     * @phpstan-template T of object
+     * @template T of object
      *
      * @phpstan-param T $event
      *

@@ -26,17 +26,15 @@ final class Response
     private array $options = [];
 
     /**
-     * @param Envelope[]           $envelopes the array of notification envelopes
-     * @param array<string, mixed> $context   additional context for the response
+     * @param Envelope[]           $envelopes
+     * @param array<string, mixed> $context
      */
     public function __construct(private readonly array $envelopes, private readonly array $context)
     {
     }
 
     /**
-     * Add scripts to the response.
-     *
-     * @param string[] $scripts the scripts to add
+     * @param string[] $scripts
      */
     public function addScripts(array $scripts): void
     {
@@ -44,9 +42,7 @@ final class Response
     }
 
     /**
-     * Add styles to the response.
-     *
-     * @param string[] $styles the styles to add
+     * @param string[] $styles
      */
     public function addStyles(array $styles): void
     {
@@ -54,10 +50,7 @@ final class Response
     }
 
     /**
-     * Add or merge options for a specific alias.
-     *
-     * @param string               $alias   the alias for the options
-     * @param array<string, mixed> $options the options to add or merge
+     * @param array<string, mixed> $options
      */
     public function addOptions(string $alias, array $options): void
     {
@@ -144,10 +137,12 @@ final class Response
     }
 
     /**
-     * @param string[] $existingItems
-     * @param string[] $newItems
+     * Adds items to a list, ensuring uniqueness and removing empty values.
      *
-     * @return string[]
+     * @param string[] $existingItems The existing list of items
+     * @param string[] $newItems      The new items to add
+     *
+     * @return string[] The combined list with duplicates and empty values removed
      */
     private function addItems(array $existingItems, array $newItems): array
     {

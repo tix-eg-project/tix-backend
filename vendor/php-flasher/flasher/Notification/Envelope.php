@@ -8,9 +8,6 @@ use Flasher\Prime\Stamp\PresentableStampInterface;
 use Flasher\Prime\Stamp\StampInterface;
 use Flasher\Prime\Support\Traits\ForwardsCalls;
 
-/**
- * Envelope class wraps a notification and manages associated stamps.
- */
 final class Envelope implements NotificationInterface
 {
     use ForwardsCalls;
@@ -21,7 +18,7 @@ final class Envelope implements NotificationInterface
     private array $stamps = [];
 
     /**
-     * @param StampInterface[]|StampInterface $stamps stamps to be added to the envelope
+     * @param StampInterface[]|StampInterface $stamps
      */
     public function __construct(private readonly NotificationInterface $notification, array|StampInterface $stamps = [])
     {
@@ -31,9 +28,7 @@ final class Envelope implements NotificationInterface
     }
 
     /**
-     * Wraps a notification in an Envelope and adds the given stamps.
-     *
-     * @param StampInterface|StampInterface[] $stamps stamps to be added to the envelope
+     * @param StampInterface[]|StampInterface $stamps
      */
     public static function wrap(NotificationInterface $notification, array|StampInterface $stamps = []): self
     {
@@ -45,11 +40,6 @@ final class Envelope implements NotificationInterface
         return $envelope;
     }
 
-    /**
-     * Adds multiple stamps to the envelope.
-     *
-     * @param StampInterface ...$stamps The stamps to add.
-     */
     public function with(StampInterface ...$stamps): void
     {
         foreach ($stamps as $stamp) {
@@ -57,12 +47,6 @@ final class Envelope implements NotificationInterface
         }
     }
 
-    /**
-     * Adds or replaces a stamp in the envelope.
-     *
-     * @param StampInterface $stamp   the stamp to add or replace
-     * @param bool           $replace whether to replace an existing stamp of the same type
-     */
     public function withStamp(StampInterface $stamp, bool $replace = true): void
     {
         if (!isset($this->stamps[$stamp::class]) || $replace) {
@@ -70,9 +54,6 @@ final class Envelope implements NotificationInterface
         }
     }
 
-    /**
-     * Removes specified stamps from the envelope.
-     */
     public function without(StampInterface ...$stamps): void
     {
         foreach ($stamps as $stamp) {
@@ -81,9 +62,7 @@ final class Envelope implements NotificationInterface
     }
 
     /**
-     * Removes a specific type of stamp from the envelope.
-     *
-     * @param class-string<StampInterface>|StampInterface $type the type of stamp to remove
+     * @param class-string<StampInterface>|StampInterface $type
      */
     public function withoutStamp(string|StampInterface $type): void
     {
@@ -93,8 +72,6 @@ final class Envelope implements NotificationInterface
     }
 
     /**
-     * Retrieves a stamp by its type.
-     *
      * @template T of StampInterface
      *
      * @phpstan-param class-string<T> $type
@@ -110,8 +87,6 @@ final class Envelope implements NotificationInterface
     }
 
     /**
-     * All stamps by their class name.
-     *
      * @return array<class-string<StampInterface>, StampInterface>
      */
     public function all(): array
@@ -119,11 +94,6 @@ final class Envelope implements NotificationInterface
         return $this->stamps;
     }
 
-    /**
-     * Gets the original notification contained in the envelope.
-     *
-     * @return NotificationInterface the wrapped notification
-     */
     public function getNotification(): NotificationInterface
     {
         return $this->notification;
@@ -185,8 +155,6 @@ final class Envelope implements NotificationInterface
     }
 
     /**
-     * Converts the envelope and its contents to an array format.
-     *
      * @return array{
      *     title: string,
      *     message: string,
@@ -207,17 +175,12 @@ final class Envelope implements NotificationInterface
 
         return [
             ...$this->notification->toArray(),
-            'metadata' => array_merge(...$stamps),
+            'metadata' => $stamps ? array_merge(...$stamps) : [],
         ];
     }
 
     /**
-     * Dynamically call methods on the wrapped notification.
-     *
-     * @param string  $method     the method name to call
-     * @param mixed[] $parameters the parameters to pass to the method
-     *
-     * @return mixed the result of the method call
+     * @param mixed[] $parameters
      */
     public function __call(string $method, array $parameters): mixed
     {

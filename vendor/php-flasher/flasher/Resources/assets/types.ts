@@ -1,25 +1,30 @@
-export type Options = { [option: string]: unknown }
+import type { Properties } from 'csstype'
 
-export type Context = { [key: string]: unknown }
+export type Options = Record<string, unknown>
+
+export type Context = Record<string, unknown>
 
 export type Envelope = {
     message: string
     title: string
     type: string
     options: Options
-    metadata: { plugin: string }
+    metadata: {
+        plugin: string
+        [key: string]: unknown
+    }
     context?: Context
 }
 
 export type Response = {
     envelopes: Envelope[]
-    options: { [plugin: string]: Options }
+    options: Record<string, Options>
     scripts: string[]
     styles: string[]
     context: Context
 }
 
-export type PluginInterface = {
+export interface PluginInterface {
     success: (message: string | Options, title?: string | Options, options?: Options) => void
     error: (message: string | Options, title?: string | Options, options?: Options) => void
     info: (message: string | Options, title?: string | Options, options?: Options) => void
@@ -32,4 +37,23 @@ export type PluginInterface = {
 export type Theme = {
     styles?: string | string[]
     render: (envelope: Envelope) => string
+}
+
+export type AssetType = 'style' | 'script'
+
+export type Asset = {
+    urls: string[]
+    nonce: string
+    type: AssetType
+}
+
+export type FlasherPluginOptions = {
+    timeout: number | boolean | null
+    timeouts: Record<string, number>
+    fps: number
+    position: string
+    direction: 'top' | 'bottom'
+    rtl: boolean
+    style: Properties
+    escapeHtml: boolean
 }

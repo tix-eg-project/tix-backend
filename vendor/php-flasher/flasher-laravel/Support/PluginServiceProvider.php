@@ -13,6 +13,9 @@ use Illuminate\Support\ServiceProvider;
 
 abstract class PluginServiceProvider extends ServiceProvider
 {
+    /**
+     * The plugin instance.
+     */
     protected PluginInterface $plugin;
 
     abstract public function createPlugin(): PluginInterface;

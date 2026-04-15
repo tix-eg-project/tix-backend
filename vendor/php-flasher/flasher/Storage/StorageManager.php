@@ -12,7 +12,6 @@ use Flasher\Prime\EventDispatcher\Event\PostUpdateEvent;
 use Flasher\Prime\EventDispatcher\Event\RemoveEvent;
 use Flasher\Prime\EventDispatcher\Event\UpdateEvent;
 use Flasher\Prime\EventDispatcher\EventDispatcherInterface;
-use Flasher\Prime\Exception\CriteriaNotRegisteredException;
 use Flasher\Prime\Notification\Envelope;
 use Flasher\Prime\Storage\Filter\FilterFactoryInterface;
 
@@ -29,13 +28,18 @@ final readonly class StorageManager implements StorageManagerInterface
     ) {
     }
 
+    /**
+     * @return Envelope[]
+     */
     public function all(): array
     {
         return $this->storage->all();
     }
 
     /**
-     * @throws CriteriaNotRegisteredException
+     * @param array<string, mixed> $criteria
+     *
+     * @return Envelope[]
      */
     public function filter(array $criteria = []): array
     {

@@ -17,6 +17,11 @@ use Symfony\Component\Finder\Finder;
 
 final class InstallCommand extends Command
 {
+    /**
+     * Command description.
+     *
+     * @var string
+     */
     protected $description = 'Installs all <fg=blue;options=bold>PHPFlasher</> resources to the <comment>public</comment> and <comment>config</comment> directories.';
 
     public function __construct(private readonly AssetManagerInterface $assetManager)
@@ -109,12 +114,12 @@ final class InstallCommand extends Command
             if ($useSymlinks) {
                 $message .= ' Assets were symlinked.';
             }
-            $output->writeln("<bg=green;options=bold> SUCCESS </> <fg=blue;options=bold>$message</>");
+            $output->writeln("<bg=green;options=bold> SUCCESS </> {$message}");
         } else {
             $output->writeln('<bg=red;options=bold> ERROR </> An error occurred during the installation of <fg=blue;options=bold>PHPFlasher</> resources.');
         }
 
-        $this->assetManager->createManifest(array_merge([], ...$files));
+        $this->assetManager->createManifest(array_merge(...$files));
 
         $output->writeln('');
 

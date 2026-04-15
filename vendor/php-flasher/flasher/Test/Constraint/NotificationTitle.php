@@ -8,14 +8,8 @@ use Flasher\Prime\EventDispatcher\Event\NotificationEvents;
 use Flasher\Prime\Notification\NotificationInterface;
 use PHPUnit\Framework\Constraint\Constraint;
 
-/**
- * Asserts that at least one notification contains a specific title.
- */
 final class NotificationTitle extends Constraint
 {
-    /**
-     * @param string $expectedTitle the title content to search for within notifications
-     */
     public function __construct(private readonly string $expectedTitle)
     {
     }

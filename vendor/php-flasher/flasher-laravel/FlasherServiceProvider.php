@@ -8,6 +8,7 @@ use Flasher\Laravel\Command\InstallCommand;
 use Flasher\Laravel\Component\FlasherComponent;
 use Flasher\Laravel\EventListener\LivewireListener;
 use Flasher\Laravel\EventListener\OctaneListener;
+use Flasher\Laravel\EventListener\ThemeLivewireListener;
 use Flasher\Laravel\Middleware\FlasherMiddleware;
 use Flasher\Laravel\Middleware\SessionMiddleware;
 use Flasher\Laravel\Storage\SessionBag;
@@ -17,6 +18,7 @@ use Flasher\Laravel\Translation\Translator;
 use Flasher\Prime\Asset\AssetManager;
 use Flasher\Prime\Container\FlasherContainer;
 use Flasher\Prime\EventDispatcher\EventDispatcher;
+use Flasher\Prime\EventDispatcher\EventDispatcherInterface;
 use Flasher\Prime\EventDispatcher\EventListener\ApplyPresetListener;
 use Flasher\Prime\EventDispatcher\EventListener\NotificationLoggerListener;
 use Flasher\Prime\EventDispatcher\EventListener\TranslationListener;
@@ -66,6 +68,7 @@ final class FlasherServiceProvider extends PluginServiceProvider
 
         $this->registerCommands();
         $this->loadTranslationsFrom(__DIR__.'/Translation/lang', 'flasher');
+        $this->loadViewsFrom(__DIR__.'/Resources/views', 'flasher');
         $this->registerMiddlewares();
         $this->callAfterResolving('blade.compiler', $this->registerBladeDirectives(...));
         $this->registerLivewire();
@@ -128,7 +131,16 @@ final class FlasherServiceProvider extends PluginServiceProvider
             $templateEngine = $app->make('flasher.template_engine');
             $assetManager = $app->make('flasher.asset_manager');
             $mainScript = $config->get('flasher.main_script');
-            $resources = $config->get('flasher.plugins');
+
+            $resources = [];
+
+            foreach ($config->get('flasher.plugins') as $name => $options) {
+                $resources[$name] = $options;
+            }
+
+            foreach ($config->get('flasher.themes') as $name => $options) {
+                $resources['theme.'.$name] = $options;
+            }
 
             return new ResourceManager($templateEngine, $assetManager, $mainScript, $resources);
         });
@@ -273,11 +285,13 @@ final class FlasherServiceProvider extends PluginServiceProvider
 
     private function registerAssetManager(): void
     {
-        $this->app->singleton('flasher.asset_manager', static function () {
+        $this->app->singleton('flasher.asset_manager', static function (Application $app) {
             $publicDir = public_path('/');
             $manifestPath = public_path('vendor'.\DIRECTORY_SEPARATOR.'flasher'.\DIRECTORY_SEPARATOR.'manifest.json');
+            $publicPath = $app->make('config')->get('flasher.public_path', '');
+            $publicPath = \is_string($publicPath) ? $publicPath : '';
 
-            return new AssetManager($publicDir, $manifestPath);
+            return new AssetManager($publicDir, $manifestPath, $publicPath);
         });
     }
 
@@ -296,7 +310,7 @@ final class FlasherServiceProvider extends PluginServiceProvider
 
     private function registerLivewire(): void
     {
-        if (class_exists(LivewireManager::class) && !$this->app->bound('livewire')) {
+        if (!class_exists(LivewireManager::class) || !$this->app->bound('livewire')) {
             return;
         }
 
@@ -306,6 +320,17 @@ final class FlasherServiceProvider extends PluginServiceProvider
             $request = fn () => $app->make('request');
 
             $livewire->listen('dehydrate', new LivewireListener($livewire, $flasher, $cspHandler, $request));
+        });
+
+        $this->registerThemeLivewireListener();
+    }
+
+    private function registerThemeLivewireListener(): void
+    {
+        $this->app->extend('flasher.event_dispatcher', static function (EventDispatcherInterface $dispatcher) {
+            $dispatcher->addListener(new ThemeLivewireListener());
+
+            return $dispatcher;
         });
     }
 }

@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Favorite;
 use App\Models\Offer;
+use App\Models\ProductFaq;
+use App\Models\ProductReview;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantItem;
 use App\Models\ProductVariantValue;
@@ -84,11 +86,6 @@ class Product extends Model
     // public function favorites()
     // {
     //     return $this->belongsToMany(Favorite::class, 'favorites');
-    // }
-
-    // public function comments():HasMany
-    // {
-    //     return $this->hasMany(Comment::class)
     // }
 
 

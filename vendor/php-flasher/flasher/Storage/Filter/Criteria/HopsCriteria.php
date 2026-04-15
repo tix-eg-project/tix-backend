@@ -11,18 +11,26 @@ final readonly class HopsCriteria implements CriteriaInterface
 {
     use RangeExtractor;
 
-    private readonly ?int $minAmount;
+    private ?int $minAmount;
 
-    private readonly ?int $maxAmount;
+    private ?int $maxAmount;
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(mixed $criteria)
     {
-        $criteria = $this->extractRange('priority', $criteria);
+        $criteria = $this->extractRange('hops', $criteria);
 
         $this->minAmount = $criteria['min'];
         $this->maxAmount = $criteria['max'];
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         return array_filter($envelopes, fn (Envelope $e): bool => $this->match($e));
@@ -36,14 +44,11 @@ final readonly class HopsCriteria implements CriteriaInterface
             return false;
         }
 
-        if (null === $this->maxAmount) {
-            return $stamp->getAmount() >= $this->minAmount;
-        }
+        $amount = $stamp->getAmount();
 
-        if ($stamp->getAmount() <= $this->maxAmount) {
-            return $stamp->getAmount() >= $this->minAmount;
-        }
+        $meetsMin = null === $this->minAmount || $amount >= $this->minAmount;
+        $meetsMax = null === $this->maxAmount || $amount <= $this->maxAmount;
 
-        return false;
+        return $meetsMin && $meetsMax;
     }
 }

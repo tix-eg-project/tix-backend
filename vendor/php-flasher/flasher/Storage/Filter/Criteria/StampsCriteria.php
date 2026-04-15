@@ -9,6 +9,7 @@ use Flasher\Prime\Notification\Envelope;
 final class StampsCriteria implements CriteriaInterface
 {
     public const STRATEGY_AND = 'and';
+
     public const STRATEGY_OR = 'or';
 
     /**
@@ -16,6 +17,9 @@ final class StampsCriteria implements CriteriaInterface
      */
     private array $stamps = [];
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(mixed $criteria, private readonly string $strategy = self::STRATEGY_AND)
     {
         if (!\is_array($criteria)) {
@@ -27,6 +31,11 @@ final class StampsCriteria implements CriteriaInterface
         }
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         return array_filter($envelopes, fn (Envelope $e): bool => $this->match($e));
@@ -34,7 +43,7 @@ final class StampsCriteria implements CriteriaInterface
 
     public function match(Envelope $envelope): bool
     {
-        $diff = array_diff($this->stamps, array_keys($envelope->all()));
+        $diff = array_diff(array_keys($this->stamps), array_keys($envelope->all()));
 
         if (self::STRATEGY_AND === $this->strategy) {
             return [] === $diff;

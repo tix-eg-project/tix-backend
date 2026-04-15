@@ -15,14 +15,22 @@ final readonly class DelayCriteria implements CriteriaInterface
 
     private ?int $maxDelay;
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(mixed $criteria)
     {
-        $criteria = $this->extractRange('priority', $criteria);
+        $criteria = $this->extractRange('delay', $criteria);
 
         $this->minDelay = $criteria['min'];
         $this->maxDelay = $criteria['max'];
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         return array_filter($envelopes, fn (Envelope $envelope): bool => $this->match($envelope));
@@ -38,14 +46,9 @@ final readonly class DelayCriteria implements CriteriaInterface
 
         $delay = $stamp->getDelay();
 
-        if (null === $this->maxDelay) {
-            return $delay >= $this->minDelay;
-        }
+        $meetsMin = null === $this->minDelay || $delay >= $this->minDelay;
+        $meetsMax = null === $this->maxDelay || $delay <= $this->maxDelay;
 
-        if ($delay <= $this->maxDelay) {
-            return $delay >= $this->minDelay;
-        }
-
-        return false;
+        return $meetsMin && $meetsMax;
     }
 }

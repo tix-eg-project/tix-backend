@@ -36,8 +36,6 @@ final readonly class Translator implements TranslatorInterface
     }
 
     /**
-     * Formats the parameters by stripping the colon prefix from keys for Laravel's translator.
-     *
      * @param array<string, mixed> $parameters
      *
      * @return array<string, mixed>

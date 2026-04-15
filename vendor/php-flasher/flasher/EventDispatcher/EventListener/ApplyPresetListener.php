@@ -20,7 +20,7 @@ use Flasher\Prime\Stamp\PresetStamp;
 final readonly class ApplyPresetListener implements EventListenerInterface
 {
     /**
-     * @phpstan-param array<string, PresetType> $presets
+     * @param array<string, PresetType> $presets
      */
     public function __construct(private array $presets)
     {
@@ -42,9 +42,7 @@ final readonly class ApplyPresetListener implements EventListenerInterface
     }
 
     /**
-     * Applies preset settings to an envelope if applicable.
-     *
-     * @throws PresetNotFoundException if the preset is not found
+     * @throws PresetNotFoundException
      */
     private function applyPreset(Envelope $envelope): void
     {
@@ -63,11 +61,7 @@ final readonly class ApplyPresetListener implements EventListenerInterface
     }
 
     /**
-     * Retrieves preset data or default values if not set.
-     *
-     * @param string $alias the preset key
-     *
-     * @phpstan-return PresetType The preset data.
+     * @return PresetType
      */
     private function getPreset(string $alias): array
     {
@@ -81,11 +75,7 @@ final readonly class ApplyPresetListener implements EventListenerInterface
     }
 
     /**
-     * Updates the envelope with the provided preset data.
-     *
-     * @param Envelope $envelope the envelope to be updated
-     *
-     * @phpstan-param PresetType $preset The preset data to apply.
+     * @param PresetType $preset
      */
     private function updateEnvelope(Envelope $envelope, array $preset): void
     {

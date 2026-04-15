@@ -15,6 +15,9 @@ final readonly class HtmlStamp implements StampInterface, PresentableStampInterf
         return $this->html;
     }
 
+    /**
+     * @return array{html: string}
+     */
     public function toArray(): array
     {
         return ['html' => $this->html];

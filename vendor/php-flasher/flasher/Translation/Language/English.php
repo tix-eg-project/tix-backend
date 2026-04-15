@@ -7,9 +7,7 @@ namespace Flasher\Prime\Translation\Language;
 final readonly class English
 {
     /**
-     * English translations.
-     *
-     * @return array<string, string> array of message keys and their English translations
+     * @return array<string, string>
      */
     public static function translations(): array
     {

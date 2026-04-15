@@ -11,7 +11,9 @@ use Flasher\Prime\Notification\Envelope;
  */
 final class NotificationEvents
 {
-    /** @var Envelope[] */
+    /**
+     * @var Envelope[]
+     */
     private array $envelopes = [];
 
     public function add(Envelope ...$notifications): void

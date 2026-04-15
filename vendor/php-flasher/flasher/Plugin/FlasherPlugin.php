@@ -12,6 +12,7 @@ use Flasher\Prime\Notification\Type;
  * @phpstan-type ConfigType array{
  *     default: string,
  *     main_script: string,
+ *     public_path: string,
  *     translate: bool,
  *     inject_assets: bool,
  *     excluded_paths: list<non-empty-string>,
@@ -88,6 +89,7 @@ final class FlasherPlugin extends Plugin
         $config = parent::normalizeConfig($config);
 
         $config = $this->normalizePlugins($config);
+        $config = $this->normalizeThemes($config);
         $config = $this->normalizePresets($config);
         $config = $this->addDefaultConfig($config);
         $config = $this->normalizeFlashBag($config);
@@ -126,18 +128,24 @@ final class FlasherPlugin extends Plugin
         }
 
         if (!empty($config['scripts'])) {
-            $config['plugins']['flasher']['scripts'] ??= [];
-            $config['plugins']['flasher']['scripts'] += $config['scripts'];
+            $config['plugins']['flasher']['scripts'] = array_merge(
+                $config['plugins']['flasher']['scripts'] ?? [],
+                $config['scripts']
+            );
         }
 
         if (!empty($config['styles'])) {
-            $config['plugins']['flasher']['styles'] ??= [];
-            $config['plugins']['flasher']['styles'] += $config['styles'];
+            $config['plugins']['flasher']['styles'] = array_merge(
+                $config['plugins']['flasher']['styles'] ?? [],
+                $config['styles']
+            );
         }
 
         if (!empty($config['options'])) {
-            $config['plugins']['flasher']['options'] ??= [];
-            $config['plugins']['flasher']['options'] += $config['options'];
+            $config['plugins']['flasher']['options'] = array_merge(
+                $config['options'],
+                $config['plugins']['flasher']['options'] ?? []
+            );
         }
 
         foreach ($config['plugins'] as $name => $options) {
@@ -147,6 +155,71 @@ final class FlasherPlugin extends Plugin
 
             if (isset($options['styles'])) {
                 $config['plugins'][$name]['styles'] = (array) $options['styles'];
+            }
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param array{
+     *     scripts: string[],
+     *     styles: string[],
+     *     options: array<string, mixed>,
+     *     plugins: array<string, mixed>,
+     *     themes?: array<string, array{
+     *         scripts?: string[],
+     *         styles?: string[],
+     *         options?: array<string, mixed>,
+     *     }>,
+     * } $config
+     *
+     * @return array{
+     *     scripts: string[],
+     *     styles: string[],
+     *     options: array<string, mixed>,
+     *     plugins: array<string, mixed>,
+     *     themes: array<string, mixed>,
+     * }
+     */
+    private function normalizeThemes(array $config): array
+    {
+        // Define default themes with their assets
+        $defaultThemes = $this->getDefaultThemes();
+
+        // Initialize themes config if not set
+        if (!isset($config['themes'])) {
+            $config['themes'] = [];
+        }
+
+        // Merge default themes with user-defined themes, prioritizing user configs
+        foreach ($defaultThemes as $themeName => $themeConfig) {
+            if (!isset($config['themes'][$themeName])) {
+                $config['themes'][$themeName] = $themeConfig;
+            } else {
+                // Make sure all required theme properties exist
+                if (!isset($config['themes'][$themeName]['scripts'])) {
+                    $config['themes'][$themeName]['scripts'] = $themeConfig['scripts'];
+                }
+                if (!isset($config['themes'][$themeName]['styles'])) {
+                    $config['themes'][$themeName]['styles'] = $themeConfig['styles'];
+                }
+                if (!isset($config['themes'][$themeName]['options'])) {
+                    $config['themes'][$themeName]['options'] = $themeConfig['options'];
+                }
+            }
+        }
+
+        // Normalize theme configs
+        foreach ($config['themes'] as $name => $options) {
+            if (isset($options['scripts'])) {
+                $config['themes'][$name]['scripts'] = (array) $options['scripts'];
+            }
+            if (isset($options['styles'])) {
+                $config['themes'][$name]['styles'] = (array) $options['styles'];
+            }
+            if (!isset($options['options'])) {
+                $config['themes'][$name]['options'] = [];
             }
         }
 
@@ -187,6 +260,7 @@ final class FlasherPlugin extends Plugin
      * @param array{
      *     default?: string|null,
      *     main_script?: string|null,
+     *     public_path?: string,
      *     translate?: bool,
      *     inject_assets?: bool,
      *     excluded_paths?: list<non-empty-string>,
@@ -201,6 +275,7 @@ final class FlasherPlugin extends Plugin
      * @return array{
      *     default: string|null,
      *     main_script: string|null,
+     *     public_path: string,
      *     translate: bool,
      *     inject_assets: bool,
      *     excluded_paths?: list<non-empty-string>,
@@ -223,6 +298,7 @@ final class FlasherPlugin extends Plugin
 
         $config['default'] = \array_key_exists('default', $config) ? $config['default'] : $this->getDefault();
         $config['main_script'] = \array_key_exists('main_script', $config) ? $config['main_script'] : $this->getRootScript();
+        $config['public_path'] = \array_key_exists('public_path', $config) ? $config['public_path'] : '';
         $config['translate'] = \array_key_exists('translate', $config) ? $config['translate'] : true;
         $config['inject_assets'] = \array_key_exists('inject_assets', $config) ? $config['inject_assets'] : true;
         $config['filter'] = \array_key_exists('filter', $config) ? $config['filter'] : [];
@@ -235,6 +311,7 @@ final class FlasherPlugin extends Plugin
      * @param array{
      *     default: string|null,
      *     main_script: string|null,
+     *     public_path: string,
      *     translate: bool,
      *     inject_assets: bool,
      *     excluded_paths?: list<non-empty-string>,
@@ -250,6 +327,7 @@ final class FlasherPlugin extends Plugin
      * @return array{
      *      default: string|null,
      *      main_script: string|null,
+     *      public_path: string,
      *      translate: bool,
      *      inject_assets: bool,
      *      excluded_paths?: list<non-empty-string>,
@@ -279,7 +357,7 @@ final class FlasherPlugin extends Plugin
             return $config;
         }
 
-        $config['flash_bag'] += array_merge($mapping, $config['flash_bag']);
+        $config['flash_bag'] = array_merge($mapping, $config['flash_bag']);
 
         return $config;
     }
@@ -288,6 +366,7 @@ final class FlasherPlugin extends Plugin
      * @param array{
      *      default: string|null,
      *      main_script: string|null,
+     *      public_path: string,
      *      translate: bool,
      *      inject_assets: bool,
      *      excluded_paths?: list<non-empty-string>,
@@ -303,6 +382,7 @@ final class FlasherPlugin extends Plugin
      * @return array{
      *      default: string|null,
      *      main_script: string|null,
+     *      public_path: string,
      *      translate: bool,
      *      inject_assets: bool,
      *      excluded_paths?: list<non-empty-string>,
@@ -323,5 +403,49 @@ final class FlasherPlugin extends Plugin
         }
 
         return $config;
+    }
+
+    private const DEFAULT_THEME_NAMES = [
+        'amazon',
+        'amber',
+        'jade',
+        'crystal',
+        'emerald',
+        'sapphire',
+        'ruby',
+        'onyx',
+        'neon',
+        'aurora',
+        'minimal',
+        'material',
+        'google',
+        'ios',
+        'slack',
+        'facebook',
+    ];
+
+    /**
+     * @return array<string, array{
+     *     scripts: string[],
+     *     styles: string[],
+     *     options: array<string, mixed>
+     * }>
+     */
+    private function getDefaultThemes(): array
+    {
+        $themes = [];
+
+        foreach (self::DEFAULT_THEME_NAMES as $name) {
+            $themes[$name] = [
+                'scripts' => ["/vendor/flasher/themes/{$name}/{$name}.min.js"],
+                'styles' => [
+                    '/vendor/flasher/flasher.min.css',
+                    "/vendor/flasher/themes/{$name}/{$name}.min.css",
+                ],
+                'options' => [],
+            ];
+        }
+
+        return $themes;
     }
 }

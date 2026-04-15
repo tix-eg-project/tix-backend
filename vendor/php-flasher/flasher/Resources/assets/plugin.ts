@@ -22,35 +22,77 @@ export abstract class AbstractPlugin implements PluginInterface {
     }
 
     public flash(type: string | Options, message: string | Options, title?: string | Options, options?: Options): void {
+        let normalizedType: string
+        let normalizedMessage: string
+        let normalizedTitle: string | undefined
+        let normalizedOptions: Options = {}
+
         if (typeof type === 'object') {
-            options = type
-            type = options.type as unknown as string
-            message = options.message as unknown as string
-            title = options.title as unknown as string
+            normalizedOptions = { ...type }
+            normalizedType = normalizedOptions.type as string
+            normalizedMessage = normalizedOptions.message as string
+            normalizedTitle = normalizedOptions.title as string
+
+            delete normalizedOptions.type
+            delete normalizedOptions.message
+            delete normalizedOptions.title
         } else if (typeof message === 'object') {
-            options = message
-            message = options.message as unknown as string
-            title = options.title as unknown as string
-        } else if (typeof title === 'object') {
-            options = title
-            title = options.title as unknown as string
+            normalizedOptions = { ...message }
+            normalizedType = type
+            normalizedMessage = normalizedOptions.message as string
+            normalizedTitle = normalizedOptions.title as string
+
+            delete normalizedOptions.message
+            delete normalizedOptions.title
+        } else {
+            normalizedType = type
+            normalizedMessage = message as string
+
+            if (title === undefined || title === null) {
+                normalizedTitle = undefined
+                normalizedOptions = options || {}
+            } else if (typeof title === 'string') {
+                normalizedTitle = title
+                normalizedOptions = options || {}
+            } else if (typeof title === 'object') {
+                normalizedOptions = { ...title }
+
+                if ('title' in normalizedOptions) {
+                    normalizedTitle = normalizedOptions.title as string
+                    delete normalizedOptions.title
+                } else {
+                    normalizedTitle = undefined
+                }
+
+                if (options && typeof options === 'object') {
+                    normalizedOptions = { ...normalizedOptions, ...options }
+                }
+            }
         }
 
-        if (undefined === message) {
-            throw new Error('message option is required')
+        if (!normalizedType) {
+            throw new Error('Type is required for notifications')
         }
 
-        const envelope = {
-            type,
-            message,
-            title: title || type,
-            options: options || {},
+        if (normalizedMessage === undefined || normalizedMessage === null) {
+            throw new Error('Message is required for notifications')
+        }
+
+        if (normalizedTitle === undefined || normalizedTitle === null) {
+            normalizedTitle = normalizedType.charAt(0).toUpperCase() + normalizedType.slice(1)
+        }
+
+        const envelope: Envelope = {
+            type: normalizedType,
+            message: normalizedMessage,
+            title: normalizedTitle,
+            options: normalizedOptions,
             metadata: {
                 plugin: '',
             },
         }
 
-        this.renderOptions(options || {})
+        this.renderOptions({})
         this.renderEnvelopes([envelope])
     }
 }

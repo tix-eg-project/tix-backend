@@ -13,6 +13,10 @@ final class NotificationFactoryLocator implements NotificationFactoryLocatorInte
      */
     private array $factories = [];
 
+    /**
+     * @throws FactoryNotFoundException
+     * @throws \InvalidArgumentException
+     */
     public function get(string $id): NotificationFactoryInterface
     {
         if (!$this->has($id)) {
@@ -21,7 +25,15 @@ final class NotificationFactoryLocator implements NotificationFactoryLocatorInte
 
         $factory = $this->factories[$id];
 
-        return \is_callable($factory) ? $factory() : $factory;
+        if (\is_callable($factory)) {
+            $factory = $factory();
+
+            if (!$factory instanceof NotificationFactoryInterface) {
+                throw new \InvalidArgumentException(\sprintf('Factory callable for "%s" must return an instance of %s, %s returned.', $id, NotificationFactoryInterface::class, get_debug_type($factory)));
+            }
+        }
+
+        return $factory;
     }
 
     public function has(string $id): bool
@@ -29,9 +41,6 @@ final class NotificationFactoryLocator implements NotificationFactoryLocatorInte
         return \array_key_exists($id, $this->factories);
     }
 
-    /**
-     * Register a custom notification factory.
-     */
     public function addFactory(string $alias, callable|NotificationFactoryInterface $factory): void
     {
         $this->factories[$alias] = $factory;

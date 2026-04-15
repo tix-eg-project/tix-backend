@@ -40,6 +40,11 @@ final class FilterFactory implements FilterFactoryInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @throws CriteriaNotRegisteredException
+     */
     public function createFilter(array $config): Filter
     {
         $filter = new Filter();
@@ -60,6 +65,7 @@ final class FilterFactory implements FilterFactoryInterface
 
     /**
      * @throws CriteriaNotRegisteredException
+     * @throws \UnexpectedValueException
      */
     private function createCriteria(string $name, mixed $value): CriteriaInterface
     {

@@ -11,15 +11,19 @@ final class AssetManager implements AssetManagerInterface
      */
     private array $entries = [];
 
-    public function __construct(private readonly string $publicDir, private readonly string $manifestPath)
-    {
+    public function __construct(
+        private readonly string $publicDir,
+        private readonly string $manifestPath,
+        private readonly string $publicPath = '',
+    ) {
     }
 
     public function getPath(string $path): string
     {
         $entriesData = $this->getEntriesData();
+        $resolved = $entriesData[$path] ?? $entriesData[ltrim($path, \DIRECTORY_SEPARATOR)] ?? $path;
 
-        return $entriesData[$path] ?? $entriesData[ltrim($path, \DIRECTORY_SEPARATOR)] ?? $path;
+        return $this->prependPublicPath($resolved);
     }
 
     public function getPaths(array $paths): array
@@ -49,9 +53,7 @@ final class AssetManager implements AssetManagerInterface
     }
 
     /**
-     * Loads and returns the entries from the manifest file.
-     *
-     * @return array<string, string> the manifest entries
+     * @return array<string, string>
      */
     private function getEntriesData(): array
     {
@@ -71,6 +73,28 @@ final class AssetManager implements AssetManagerInterface
         }
 
         return $this->entries = $entries; // @phpstan-ignore-line
+    }
+
+    private function prependPublicPath(string $path): string
+    {
+        if ('' === $this->publicPath || '' === $path) {
+            return $path;
+        }
+
+        if (1 === preg_match('#^(?:[a-z][a-z0-9+\-.]*:)?//#i', $path) || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+
+        $prefix = rtrim($this->publicPath, '/');
+        if ('' === $prefix) {
+            return $path;
+        }
+
+        if (str_starts_with($path, $prefix.'/')) {
+            return $path;
+        }
+
+        return $prefix.'/'.ltrim($path, '/');
     }
 
     private function computeHash(string $path): string

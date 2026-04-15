@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flasher\Prime\Storage\Filter\Criteria;
 
+use Flasher\Prime\Notification\Envelope;
+
 final class FilterCriteria implements CriteriaInterface
 {
     /**
      * @var \Closure[]
      */
-    private array $callbacks;
+    private array $callbacks = [];
 
     /**
-     * @throws \InvalidArgumentException if the criteria type is invalid
+     * @throws \InvalidArgumentException
      */
     public function __construct(mixed $criteria)
     {
@@ -23,7 +25,7 @@ final class FilterCriteria implements CriteriaInterface
         $criteria = $criteria instanceof \Closure ? [$criteria] : $criteria;
         foreach ($criteria as $callback) {
             if (!$callback instanceof \Closure) {
-                throw new \InvalidArgumentException(\sprintf('Each element must be a closure, got got "%s".', get_debug_type($callback)));
+                throw new \InvalidArgumentException(\sprintf('Each element must be a closure, got "%s".', get_debug_type($callback)));
             }
 
             $this->callbacks[] = $callback;
@@ -31,12 +33,23 @@ final class FilterCriteria implements CriteriaInterface
     }
 
     /**
-     * Applies the filter callbacks to the envelopes.
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     *
+     * @throws \InvalidArgumentException
      */
     public function apply(array $envelopes): array
     {
         foreach ($this->callbacks as $callback) {
-            $envelopes = $callback($envelopes);
+            $result = $callback($envelopes);
+
+            if (!\is_array($result)) {
+                throw new \InvalidArgumentException(\sprintf('Filter callback must return an array, got "%s".', get_debug_type($result)));
+            }
+
+            /** @var Envelope[] $result */
+            $envelopes = $result;
         }
 
         return $envelopes;

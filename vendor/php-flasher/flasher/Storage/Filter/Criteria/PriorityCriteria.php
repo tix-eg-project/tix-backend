@@ -15,6 +15,9 @@ final readonly class PriorityCriteria implements CriteriaInterface
 
     private ?int $maxPriority;
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(mixed $criteria)
     {
         $criteria = $this->extractRange('priority', $criteria);
@@ -23,6 +26,11 @@ final readonly class PriorityCriteria implements CriteriaInterface
         $this->maxPriority = $criteria['max'];
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         return array_filter($envelopes, fn (Envelope $envelope): bool => $this->match($envelope));
@@ -38,14 +46,9 @@ final readonly class PriorityCriteria implements CriteriaInterface
 
         $priority = $stamp->getPriority();
 
-        if (null === $this->maxPriority) {
-            return $priority >= $this->minPriority;
-        }
+        $meetsMin = null === $this->minPriority || $priority >= $this->minPriority;
+        $meetsMax = null === $this->maxPriority || $priority <= $this->maxPriority;
 
-        if ($priority <= $this->maxPriority) {
-            return $priority >= $this->minPriority;
-        }
-
-        return false;
+        return $meetsMin && $meetsMax;
     }
 }

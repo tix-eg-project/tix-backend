@@ -14,8 +14,10 @@ abstract class NotificationFactory implements NotificationFactoryInterface
 {
     use ForwardsCalls;
 
-    public function __construct(protected StorageManagerInterface $storageManager, protected ?string $plugin = null)
-    {
+    public function __construct(
+        protected StorageManagerInterface $storageManager,
+        protected ?string $plugin = null,
+    ) {
     }
 
     /**

@@ -15,6 +15,9 @@ use Flasher\Prime\Response\Presenter\PresenterInterface;
 use Flasher\Prime\Response\Resource\ResourceManagerInterface;
 use Flasher\Prime\Storage\StorageManagerInterface;
 
+/**
+ * @phpstan-import-type ArrayPresenterType from ArrayPresenter
+ */
 final class ResponseManager implements ResponseManagerInterface
 {
     /**
@@ -32,6 +35,15 @@ final class ResponseManager implements ResponseManagerInterface
         $this->addPresenter('array', fn () => new ArrayPresenter());
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     * @param array<string, mixed> $context
+     *
+     * @phpstan-return ($presenter is 'html' ? string :
+     *           ($presenter is 'array' ? ArrayPresenterType :
+     *           ($presenter is 'json' ? ArrayPresenterType :
+     *                       mixed)))
+     */
     public function render(string $presenter = 'html', array $criteria = [], array $context = []): mixed
     {
         $envelopes = $this->storageManager->filter($criteria);
@@ -54,6 +66,10 @@ final class ResponseManager implements ResponseManagerInterface
         $this->presenters[$alias] = $presenter;
     }
 
+    /**
+     * @throws PresenterNotFoundException
+     * @throws \InvalidArgumentException
+     */
     private function createPresenter(string $alias): PresenterInterface
     {
         if (!isset($this->presenters[$alias])) {
@@ -62,7 +78,15 @@ final class ResponseManager implements ResponseManagerInterface
 
         $presenter = $this->presenters[$alias];
 
-        return \is_callable($presenter) ? $presenter() : $presenter;
+        if (\is_callable($presenter)) {
+            $presenter = $presenter();
+
+            if (!$presenter instanceof PresenterInterface) {
+                throw new \InvalidArgumentException(\sprintf('Presenter callable for "%s" must return an instance of %s, %s returned.', $alias, PresenterInterface::class, get_debug_type($presenter)));
+            }
+        }
+
+        return $presenter;
     }
 
     /**

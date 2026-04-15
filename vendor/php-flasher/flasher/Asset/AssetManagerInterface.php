@@ -6,13 +6,6 @@ namespace Flasher\Prime\Asset;
 
 interface AssetManagerInterface
 {
-    /**
-     * Resolves the given path to its hashed version if available in the manifest.
-     *
-     * @param string $path the original file path
-     *
-     * @return string the resolved file path or the original path if not found in the manifest
-     */
     public function getPath(string $path): string;
 
     /**
@@ -23,9 +16,7 @@ interface AssetManagerInterface
     public function getPaths(array $paths): array;
 
     /**
-     * Generates a json manifest from given files.
-     *
-     * @param string[] $files array of file paths
+     * @param string[] $files
      */
     public function createManifest(array $files): void;
 }

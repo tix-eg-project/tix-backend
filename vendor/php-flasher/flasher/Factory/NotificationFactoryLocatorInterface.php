@@ -6,8 +6,6 @@ namespace Flasher\Prime\Factory;
 
 interface NotificationFactoryLocatorInterface
 {
-    public function has(string $id): bool;
-
     /**
      * @phpstan-return ($id is 'flasher' ? \Flasher\Prime\Factory\FlasherFactoryInterface :
      *          ($id is 'noty' ? \Flasher\Noty\Prime\NotyInterface :
@@ -15,6 +13,10 @@ interface NotificationFactoryLocatorInterface
      *          ($id is 'sweetalert' ? \Flasher\SweetAlert\Prime\SweetAlertInterface :
      *          ($id is 'toastr' ? \Flasher\Toastr\Prime\ToastrInterface :
      *                  \Flasher\Prime\Factory\NotificationFactoryInterface)))))
+     *
+     * @throws \Flasher\Prime\Exception\FactoryNotFoundException
      */
     public function get(string $id): NotificationFactoryInterface;
+
+    public function has(string $id): bool;
 }

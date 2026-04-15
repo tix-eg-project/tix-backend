@@ -9,8 +9,6 @@ namespace Flasher\Prime\Http;
  */
 interface RequestInterface
 {
-    // public function getUri(): string;
-
     public function isXmlHttpRequest(): bool;
 
     public function isHtmlRequestFormat(): bool;

@@ -13,11 +13,6 @@ use Flasher\Prime\Translation\Language\Portuguese;
 use Flasher\Prime\Translation\Language\Russian;
 use Flasher\Prime\Translation\Language\Spanish;
 
-/**
- * This class provides a set of predefined message translations in various languages.
- * It holds arrays of key-value pairs where keys are message identifiers and values
- * are their respective translations.
- */
 final readonly class Messages
 {
     /**

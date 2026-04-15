@@ -8,6 +8,8 @@ interface TemplateEngineInterface
 {
     /**
      * @param array<string, mixed> $context
+     *
+     * @throws \InvalidArgumentException
      */
     public function render(string $name, array $context = []): string;
 }

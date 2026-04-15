@@ -14,6 +14,9 @@ final readonly class Storage implements StorageInterface
     {
     }
 
+    /**
+     * @return Envelope[]
+     */
     public function all(): array
     {
         return array_values($this->bag->get());

@@ -8,18 +8,10 @@ use Flasher\Prime\EventDispatcher\Event\NotificationEvents;
 use Flasher\Prime\Notification\NotificationInterface;
 use PHPUnit\Framework\Constraint\Constraint;
 
-/**
- * Checks for the existence of a notification with specified details.
- */
 final class Notification extends Constraint
 {
     /**
-     * Constructor to initialize notification expectations.
-     *
-     * @param string               $expectedType    expected type of the notification
-     * @param string|null          $expectedMessage expected message content
-     * @param array<string, mixed> $expectedOptions expected options array
-     * @param string|null          $expectedTitle   expected title of the notification
+     * @param array<string, mixed> $expectedOptions
      */
     public function __construct(
         private readonly string $expectedType,
@@ -50,9 +42,6 @@ final class Notification extends Constraint
         return 'contains a notification with '.implode(', ', $details);
     }
 
-    /**
-     * @param NotificationEvents|mixed $other
-     */
     protected function matches(mixed $other): bool
     {
         if (!$other instanceof NotificationEvents) {

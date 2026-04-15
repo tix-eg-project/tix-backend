@@ -22,6 +22,7 @@ use Flasher\Prime\Stamp\WhenStamp;
 final class OrderByCriteria implements CriteriaInterface
 {
     public const ASC = 'ASC';
+
     public const DESC = 'DESC';
 
     /**
@@ -46,6 +47,9 @@ final class OrderByCriteria implements CriteriaInterface
      */
     private array $orderings = [];
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(mixed $criteria)
     {
         if (!\is_string($criteria) && !\is_array($criteria)) {
@@ -81,6 +85,11 @@ final class OrderByCriteria implements CriteriaInterface
         }
     }
 
+    /**
+     * @param Envelope[] $envelopes
+     *
+     * @return Envelope[]
+     */
     public function apply(array $envelopes): array
     {
         usort($envelopes, function (Envelope $first, Envelope $second): int {
@@ -89,12 +98,16 @@ final class OrderByCriteria implements CriteriaInterface
                 $stampB = $second->get($field);
 
                 if (!$stampA instanceof OrderableStampInterface || !$stampB instanceof OrderableStampInterface) {
-                    return 0;
+                    continue;
                 }
 
-                return self::ASC === $ordering
+                $comparison = self::ASC === $ordering
                     ? $stampA->compare($stampB)
                     : $stampB->compare($stampA);
+
+                if (0 !== $comparison) {
+                    return $comparison;
+                }
             }
 
             return 0;

@@ -9,9 +9,10 @@ use Flasher\Prime\FlasherInterface;
 use Psr\Container\ContainerInterface;
 
 /**
- * Manages and provides access to Flasher service instances using a PSR-11 compatible container.
- * Allows initializing the internal container using a direct instance, a Closure, or a callable
- * that returns a ContainerInterface instance.
+ * Service container for PHPFlasher.
+ *
+ * Provides a static access point to the flasher services.
+ * Must be initialized with a PSR-11 container or a closure that returns one.
  *
  * @internal
  */
@@ -24,9 +25,9 @@ final class FlasherContainer
     }
 
     /**
-     * Initializes the container with a direct ContainerInterface or a Closure/callable that resolves to one.
+     * Initialize the container with a PSR-11 container or a lazy-loading closure.
      *
-     * @param ContainerInterface|\Closure $container a ContainerInterface instance or a resolver that returns one
+     * @param ContainerInterface|\Closure(): ContainerInterface $container
      */
     public static function from(ContainerInterface|\Closure $container): void
     {
@@ -34,7 +35,31 @@ final class FlasherContainer
     }
 
     /**
-     * Resets the container instance, effectively clearing it.
+     * Alias for from() - sets the container instance.
+     *
+     * @param FlasherInterface $flasher The flasher instance to use
+     */
+    public static function setContainer(FlasherInterface $flasher): void
+    {
+        self::$instance = new self(new class($flasher) implements ContainerInterface {
+            public function __construct(private readonly FlasherInterface $flasher)
+            {
+            }
+
+            public function get(string $id): FlasherInterface
+            {
+                return $this->flasher;
+            }
+
+            public function has(string $id): bool
+            {
+                return 'flasher' === $id;
+            }
+        });
+    }
+
+    /**
+     * Reset the container instance.
      */
     public static function reset(): void
     {
@@ -42,10 +67,12 @@ final class FlasherContainer
     }
 
     /**
-     * Creates and returns an instance of a service identified by $id.
-     * Throws an exception if the service is not found or does not implement the required interfaces.
+     * Create or retrieve a flasher service from the container.
      *
-     * @param string $id the service identifier
+     * @param string $id The service identifier (e.g., 'flasher', 'flasher.toastr')
+     *
+     * @throws \InvalidArgumentException If the service is not found or invalid
+     * @throws \LogicException           If the container has not been initialized
      *
      * @phpstan-return ($id is 'flasher' ? \Flasher\Prime\FlasherInterface :
      *          ($id is 'flasher.noty' ? \Flasher\Noty\Prime\NotyInterface :
@@ -70,11 +97,11 @@ final class FlasherContainer
     }
 
     /**
-     * Checks if the container has a service identified by $id.
+     * Check if a service exists in the container.
      *
-     * @param string $id the service identifier
+     * @param string $id The service identifier
      *
-     * @return bool true if the service exists, false otherwise
+     * @throws \LogicException If the container has not been initialized
      */
     public static function has(string $id): bool
     {
@@ -82,15 +109,16 @@ final class FlasherContainer
     }
 
     /**
-     * Retrieves the container, resolving it if necessary.
+     * Get the underlying PSR-11 container.
      *
-     * @return ContainerInterface the container instance
+     * @throws \LogicException           If the container has not been initialized
+     * @throws \InvalidArgumentException If the container closure returns an invalid type
      */
     public static function getContainer(): ContainerInterface
     {
         $container = self::getInstance()->container;
 
-        $resolved = $container instanceof \Closure || \is_callable($container) ? $container() : $container;
+        $resolved = $container instanceof \Closure ? $container() : $container;
 
         if (!$resolved instanceof ContainerInterface) {
             throw new \InvalidArgumentException(\sprintf('Expected an instance of "%s", got "%s".', ContainerInterface::class, get_debug_type($resolved)));
@@ -99,11 +127,6 @@ final class FlasherContainer
         return $resolved;
     }
 
-    /**
-     * Retrieves the singleton instance of FlasherContainer, throws if not initialized.
-     *
-     * @return self the singleton instance
-     */
     private static function getInstance(): self
     {
         if (!self::$instance instanceof self) {

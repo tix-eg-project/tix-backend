@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->json('selections');
 
-            // $table->string('options_key');
+            $table->string('options_key');
 
             $table->decimal('price', 10, 2);
 

@@ -8,13 +8,6 @@ use Flasher\Prime\EventDispatcher\Event\NotificationEvents;
 use Flasher\Prime\Notification\NotificationInterface;
 use PHPUnit\Framework\Constraint\Constraint;
 
-/**
- * A constraint that asserts a specific type of notification is present.
- *
- * This constraint checks if among the notifications present, there is at least
- * one of a specified type. This is useful for tests that need to verify the presence
- * of certain types of notifications among those that have been dispatched.
- */
 final class NotificationType extends Constraint
 {
     public function __construct(private readonly string $expectedType)
@@ -26,14 +19,6 @@ final class NotificationType extends Constraint
         return \sprintf('contains a notification of type "%s".', $this->expectedType);
     }
 
-    /**
-     * Evaluates the constraint for the parameter $other.
-     * If $other is not an instance of NotificationEvents, the method will return false.
-     *
-     * @param NotificationEvents|mixed $other value or object to evaluate
-     *
-     * @return bool true if the constraint is met, false otherwise
-     */
     protected function matches(mixed $other): bool
     {
         if (!$other instanceof NotificationEvents) {
@@ -50,11 +35,7 @@ final class NotificationType extends Constraint
     }
 
     /**
-     * Returns a custom failure description for when the constraint is not met.
-     *
-     * @param NotificationEvents $other evaluated object or value
-     *
-     * @return string the failure description
+     * @param NotificationEvents $other
      */
     protected function failureDescription(mixed $other): string
     {

@@ -60,8 +60,8 @@ final class FlasherBuilder extends NotificationBuilder
     }
 
     /**
-     * @phpstan-param NotificationType $type
-     * @phpstan-param OptionsType      $options
+     * @phpstan-param NotificationType|null $type
+     * @phpstan-param OptionsType $options
      */
     public function flash(?string $type = null, ?string $message = null, array $options = [], ?string $title = null): Envelope
     {

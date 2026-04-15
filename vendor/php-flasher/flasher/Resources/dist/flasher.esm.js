@@ -1,3 +1,8 @@
+/**
+ * @package PHPFlasher
+ * @author Younes ENNAJI
+ * @license MIT
+ */
 function __awaiter(thisArg, _arguments, P, generator) {
   function adopt(value) {
     return value instanceof P ? value : new P(function (resolve) {
@@ -44,34 +49,71 @@ class AbstractPlugin {
         this.flash('warning', message, title, options);
     }
     flash(type, message, title, options) {
+        let normalizedType;
+        let normalizedMessage;
+        let normalizedTitle;
+        let normalizedOptions = {};
         if (typeof type === 'object') {
-            options = type;
-            type = options.type;
-            message = options.message;
-            title = options.title;
+            normalizedOptions = Object.assign({}, type);
+            normalizedType = normalizedOptions.type;
+            normalizedMessage = normalizedOptions.message;
+            normalizedTitle = normalizedOptions.title;
+            delete normalizedOptions.type;
+            delete normalizedOptions.message;
+            delete normalizedOptions.title;
         }
         else if (typeof message === 'object') {
-            options = message;
-            message = options.message;
-            title = options.title;
+            normalizedOptions = Object.assign({}, message);
+            normalizedType = type;
+            normalizedMessage = normalizedOptions.message;
+            normalizedTitle = normalizedOptions.title;
+            delete normalizedOptions.message;
+            delete normalizedOptions.title;
         }
-        else if (typeof title === 'object') {
-            options = title;
-            title = options.title;
+        else {
+            normalizedType = type;
+            normalizedMessage = message;
+            if (title === undefined || title === null) {
+                normalizedTitle = undefined;
+                normalizedOptions = options || {};
+            }
+            else if (typeof title === 'string') {
+                normalizedTitle = title;
+                normalizedOptions = options || {};
+            }
+            else if (typeof title === 'object') {
+                normalizedOptions = Object.assign({}, title);
+                if ('title' in normalizedOptions) {
+                    normalizedTitle = normalizedOptions.title;
+                    delete normalizedOptions.title;
+                }
+                else {
+                    normalizedTitle = undefined;
+                }
+                if (options && typeof options === 'object') {
+                    normalizedOptions = Object.assign(Object.assign({}, normalizedOptions), options);
+                }
+            }
         }
-        if (undefined === message) {
-            throw new Error('message option is required');
+        if (!normalizedType) {
+            throw new Error('Type is required for notifications');
+        }
+        if (normalizedMessage === undefined || normalizedMessage === null) {
+            throw new Error('Message is required for notifications');
+        }
+        if (normalizedTitle === undefined || normalizedTitle === null) {
+            normalizedTitle = normalizedType.charAt(0).toUpperCase() + normalizedType.slice(1);
         }
         const envelope = {
-            type,
-            message,
-            title: title || type,
-            options: options || {},
+            type: normalizedType,
+            message: normalizedMessage,
+            title: normalizedTitle,
+            options: normalizedOptions,
             metadata: {
                 plugin: '',
             },
         };
-        this.renderOptions(options || {});
+        this.renderOptions({});
         this.renderEnvelopes([envelope]);
     }
 }
@@ -82,10 +124,10 @@ class FlasherPlugin extends AbstractPlugin {
         this.options = {
             timeout: null,
             timeouts: {
-                success: 5000,
-                info: 5000,
-                error: 5000,
-                warning: 5000,
+                success: 10000,
+                info: 10000,
+                error: 10000,
+                warning: 10000,
             },
             fps: 30,
             position: 'top-right',
@@ -94,18 +136,54 @@ class FlasherPlugin extends AbstractPlugin {
             style: {},
             escapeHtml: false,
         };
+        if (!theme) {
+            throw new Error('Theme is required');
+        }
+        if (typeof theme.render !== 'function') {
+            throw new TypeError('Theme must have a render function');
+        }
         this.theme = theme;
     }
     renderEnvelopes(envelopes) {
-        const render = () => envelopes.forEach((envelope) => {
-            var _a, _b, _c, _d;
-            const typeTimeout = (_b = (_a = this.options.timeout) !== null && _a !== void 0 ? _a : this.options.timeouts[envelope.type]) !== null && _b !== void 0 ? _b : 5000;
-            const options = Object.assign(Object.assign(Object.assign({}, this.options), envelope.options), { timeout: (_c = envelope.options.timeout) !== null && _c !== void 0 ? _c : typeTimeout, escapeHtml: ((_d = envelope.options.escapeHtml) !== null && _d !== void 0 ? _d : this.options.escapeHtml) });
-            this.addToContainer(this.createContainer(options), envelope, options);
-        });
-        document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', render) : render();
+        if (!(envelopes === null || envelopes === void 0 ? void 0 : envelopes.length)) {
+            return;
+        }
+        const render = () => {
+            envelopes.forEach((envelope) => {
+                var _a, _b, _c, _d;
+                try {
+                    const typeTimeout = (_b = (_a = this.options.timeout) !== null && _a !== void 0 ? _a : this.options.timeouts[envelope.type]) !== null && _b !== void 0 ? _b : 10000;
+                    const mergedOptions = Object.assign(Object.assign(Object.assign({}, this.options), envelope.options), { timeout: this.normalizeTimeout((_c = envelope.options.timeout) !== null && _c !== void 0 ? _c : typeTimeout), escapeHtml: ((_d = envelope.options.escapeHtml) !== null && _d !== void 0 ? _d : this.options.escapeHtml) });
+                    const container = this.createContainer(mergedOptions);
+                    const containerOptions = {
+                        direction: mergedOptions.direction,
+                        timeout: Number(mergedOptions.timeout || 0),
+                        fps: mergedOptions.fps,
+                        rtl: mergedOptions.rtl,
+                        escapeHtml: mergedOptions.escapeHtml,
+                    };
+                    this.addToContainer(container, envelope, containerOptions);
+                }
+                catch (error) {
+                    console.error('PHPFlasher: Error rendering envelope', error, envelope);
+                }
+            });
+        };
+        if (document.readyState === 'loading') {
+            const onDOMReady = () => {
+                document.removeEventListener('DOMContentLoaded', onDOMReady);
+                render();
+            };
+            document.addEventListener('DOMContentLoaded', onDOMReady);
+        }
+        else {
+            render();
+        }
     }
     renderOptions(options) {
+        if (!options) {
+            return;
+        }
         this.options = Object.assign(Object.assign({}, this.options), options);
     }
     createContainer(options) {
@@ -114,83 +192,169 @@ class FlasherPlugin extends AbstractPlugin {
             container = document.createElement('div');
             container.className = 'fl-wrapper';
             container.dataset.position = options.position;
-            Object.entries(options.style).forEach(([key, value]) => container.style.setProperty(key, value));
+            Object.entries(options.style).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    container.style.setProperty(cssKey, String(value));
+                }
+            });
             document.body.appendChild(container);
         }
         container.dataset.turboTemporary = '';
         return container;
     }
     addToContainer(container, envelope, options) {
-        var _a;
         if (options.escapeHtml) {
             envelope.title = this.escapeHtml(envelope.title);
             envelope.message = this.escapeHtml(envelope.message);
         }
         const notification = this.stringToHTML(this.theme.render(envelope));
-        notification.classList.add(...`fl-container${options.rtl ? ' fl-rtl' : ''}`.split(' '));
-        options.direction === 'bottom' ? container.append(notification) : container.prepend(notification);
+        notification.classList.add('fl-container');
+        if (options.rtl) {
+            notification.classList.add('fl-rtl');
+        }
+        if (options.direction === 'bottom') {
+            container.append(notification);
+        }
+        else {
+            container.prepend(notification);
+        }
         requestAnimationFrame(() => notification.classList.add('fl-show'));
-        (_a = notification.querySelector('.fl-close')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', (event) => {
-            event.stopPropagation();
-            this.removeNotification(notification);
+        const closeButton = notification.querySelector('.fl-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                this.removeNotification(notification);
+            });
+        }
+        notification.addEventListener('click', (event) => {
+            if (event.target.closest('.fl-close')) {
+                return;
+            }
+            this.dispatchClickEvents(envelope);
         });
-        this.addProgressBar(notification, options);
+        if (options.timeout > 0) {
+            this.addTimer(notification, options);
+        }
+        else {
+            notification.classList.add('fl-sticky');
+            const progressBarContainer = notification.querySelector('.fl-progress-bar');
+            if (progressBarContainer) {
+                const progressBar = document.createElement('span');
+                progressBar.classList.add('fl-progress', 'fl-sticky-progress');
+                progressBar.style.width = '100%';
+                progressBarContainer.append(progressBar);
+            }
+        }
     }
-    addProgressBar(notification, { timeout, fps }) {
-        if (timeout <= 0 || fps <= 0) {
+    normalizeTimeout(timeout) {
+        if (timeout === false || (typeof timeout === 'number' && timeout < 0)) {
+            return 0;
+        }
+        if (timeout == null) {
+            return 0;
+        }
+        return Number(timeout) || 0;
+    }
+    addTimer(notification, { timeout, fps }) {
+        if (timeout <= 0) {
             return;
         }
-        const progressBarContainer = notification.querySelector('.fl-progress-bar');
-        if (!progressBarContainer) {
-            return;
-        }
-        const progressBar = document.createElement('span');
-        progressBar.classList.add('fl-progress');
-        progressBarContainer.append(progressBar);
         const lapse = 1000 / fps;
-        let width = 0;
-        const updateProgress = () => {
-            width += 1;
-            const percent = (1 - lapse * (width / timeout)) * 100;
-            progressBar.style.width = `${percent}%`;
-            if (percent <= 0) {
+        let elapsed = 0;
+        let intervalId;
+        const updateTimer = () => {
+            elapsed += lapse;
+            const progressBarContainer = notification.querySelector('.fl-progress-bar');
+            if (progressBarContainer) {
+                let progressBar = progressBarContainer.querySelector('.fl-progress');
+                if (!progressBar) {
+                    progressBar = document.createElement('span');
+                    progressBar.classList.add('fl-progress');
+                    progressBarContainer.append(progressBar);
+                }
+                const percent = (1 - elapsed / timeout) * 100;
+                progressBar.style.width = `${Math.max(0, percent)}%`;
+            }
+            if (elapsed >= timeout) {
                 clearInterval(intervalId);
                 this.removeNotification(notification);
             }
         };
-        let intervalId = window.setInterval(updateProgress, lapse);
-        notification.addEventListener('mouseout', () => intervalId = window.setInterval(updateProgress, lapse));
-        notification.addEventListener('mouseover', () => clearInterval(intervalId));
+        intervalId = window.setInterval(updateTimer, lapse);
+        const handleMouseOut = () => {
+            clearInterval(intervalId);
+            intervalId = window.setInterval(updateTimer, lapse);
+        };
+        const handleMouseOver = () => clearInterval(intervalId);
+        notification.addEventListener('mouseout', handleMouseOut);
+        notification.addEventListener('mouseover', handleMouseOver);
+        notification._flasherCleanup = () => {
+            clearInterval(intervalId);
+            notification.removeEventListener('mouseout', handleMouseOut);
+            notification.removeEventListener('mouseover', handleMouseOver);
+        };
     }
     removeNotification(notification) {
+        if (!notification) {
+            return;
+        }
+        if (notification._flasherCleanup) {
+            notification._flasherCleanup();
+            delete notification._flasherCleanup;
+        }
         notification.classList.remove('fl-show');
         notification.ontransitionend = () => {
-            var _a, _b;
-            !((_a = notification.parentElement) === null || _a === void 0 ? void 0 : _a.hasChildNodes()) && ((_b = notification.parentElement) === null || _b === void 0 ? void 0 : _b.remove());
+            const parent = notification.parentElement;
             notification.remove();
+            if (parent && !parent.hasChildNodes()) {
+                parent.remove();
+            }
         };
     }
     stringToHTML(str) {
         const template = document.createElement('template');
         template.innerHTML = str.trim();
-        return template.content.firstElementChild;
+        const element = template.content.firstElementChild;
+        if (!element) {
+            throw new Error('PHPFlasher: Invalid HTML template - no element found');
+        }
+        return element;
     }
     escapeHtml(str) {
         if (str == null) {
             return '';
         }
-        return str.replace(/[&<>"'`=\/]/g, (char) => {
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                '\'': '&#39;',
-                '`': '&#96;',
-                '=': '&#61;',
-                '/': '&#47;',
-            }[char];
-        });
+        const htmlEscapes = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            '\'': '&#39;',
+            '`': '&#96;',
+            '=': '&#61;',
+            '/': '&#47;',
+        };
+        return str.replace(/[&<>"'`=/]/g, (char) => htmlEscapes[char] || char);
+    }
+    dispatchClickEvents(envelope) {
+        const detail = { envelope };
+        window.dispatchEvent(new CustomEvent('flasher:theme:click', { detail }));
+        const themeName = this.getThemeName(envelope);
+        if (themeName) {
+            window.dispatchEvent(new CustomEvent(`flasher:theme:${themeName}:click`, { detail }));
+        }
+    }
+    getThemeName(envelope) {
+        var _a;
+        const plugin = ((_a = envelope.metadata) === null || _a === void 0 ? void 0 : _a.plugin) || '';
+        if (plugin.startsWith('theme.')) {
+            return plugin.replace('theme.', '');
+        }
+        if (plugin === 'flasher') {
+            return 'flasher';
+        }
+        return plugin;
     }
 }
 
@@ -200,54 +364,82 @@ class Flasher extends AbstractPlugin {
         this.defaultPlugin = 'flasher';
         this.plugins = new Map();
         this.themes = new Map();
+        this.loadedAssets = new Set();
     }
     render(response) {
         return __awaiter(this, void 0, void 0, function* () {
             const resolved = this.resolveResponse(response);
-            yield this.addAssets([
-                {
-                    urls: resolved.styles,
-                    nonce: resolved.context.csp_style_nonce,
-                    type: 'style',
-                },
-                {
-                    urls: resolved.scripts,
-                    nonce: resolved.context.csp_script_nonce,
-                    type: 'script',
-                },
-            ]);
-            this.renderOptions(resolved.options);
-            this.renderEnvelopes(resolved.envelopes);
+            try {
+                yield this.addAssets([
+                    {
+                        urls: resolved.styles,
+                        nonce: resolved.context.csp_style_nonce,
+                        type: 'style',
+                    },
+                    {
+                        urls: resolved.scripts,
+                        nonce: resolved.context.csp_script_nonce,
+                        type: 'script',
+                    },
+                ]);
+                this.renderOptions(resolved.options);
+                this.renderEnvelopes(resolved.envelopes);
+            }
+            catch (error) {
+                console.error('PHPFlasher: Error rendering notifications', error);
+            }
         });
     }
     renderEnvelopes(envelopes) {
-        const map = {};
+        if (!(envelopes === null || envelopes === void 0 ? void 0 : envelopes.length)) {
+            return;
+        }
+        const groupedByPlugin = {};
         envelopes.forEach((envelope) => {
             const plugin = this.resolvePluginAlias(envelope.metadata.plugin);
-            map[plugin] = map[plugin] || [];
-            map[plugin].push(envelope);
+            groupedByPlugin[plugin] = groupedByPlugin[plugin] || [];
+            groupedByPlugin[plugin].push(envelope);
         });
-        Object.entries(map).forEach(([plugin, envelopes]) => {
-            this.use(plugin).renderEnvelopes(envelopes);
+        Object.entries(groupedByPlugin).forEach(([pluginName, pluginEnvelopes]) => {
+            try {
+                this.use(pluginName).renderEnvelopes(pluginEnvelopes);
+            }
+            catch (error) {
+                console.error(`PHPFlasher: Error rendering envelopes for plugin "${pluginName}"`, error);
+            }
         });
     }
     renderOptions(options) {
+        if (!options) {
+            return;
+        }
         Object.entries(options).forEach(([plugin, option]) => {
-            this.use(plugin).renderOptions(option);
+            try {
+                this.use(plugin).renderOptions(option);
+            }
+            catch (error) {
+                console.error(`PHPFlasher: Error applying options for plugin "${plugin}"`, error);
+            }
         });
     }
     addPlugin(name, plugin) {
+        if (!name || !plugin) {
+            throw new Error('Both plugin name and instance are required');
+        }
         this.plugins.set(name, plugin);
     }
     addTheme(name, theme) {
+        if (!name || !theme) {
+            throw new Error('Both theme name and definition are required');
+        }
         this.themes.set(name, theme);
     }
     use(name) {
-        name = this.resolvePluginAlias(name);
-        this.resolvePlugin(name);
-        const plugin = this.plugins.get(name);
+        const resolvedName = this.resolvePluginAlias(name);
+        this.resolvePlugin(resolvedName);
+        const plugin = this.plugins.get(resolvedName);
         if (!plugin) {
-            throw new Error(`Unable to resolve "${name}" plugin, did you forget to register it?`);
+            throw new Error(`Unable to resolve "${resolvedName}" plugin, did you forget to register it?`);
         }
         return plugin;
     }
@@ -266,37 +458,53 @@ class Flasher extends AbstractPlugin {
             envelope.metadata.plugin = this.resolvePluginAlias(envelope.metadata.plugin);
             this.addThemeStyles(resolved, envelope.metadata.plugin);
             envelope.options = this.resolveOptions(envelope.options);
-            envelope.context = response.context;
+            envelope.context = resolved.context;
         });
         return resolved;
     }
     resolveOptions(options) {
-        Object.entries(options).forEach(([key, value]) => {
-            options[key] = this.resolveFunction(value);
+        if (!options) {
+            return {};
+        }
+        const resolved = Object.assign({}, options);
+        Object.entries(resolved).forEach(([key, value]) => {
+            resolved[key] = this.resolveFunction(value);
         });
-        return options;
+        return resolved;
     }
     resolveFunction(func) {
-        var _a, _b;
+        var _a, _b, _c, _d;
         if (typeof func !== 'string') {
             return func;
         }
         const functionRegex = /^function\s*(\w*)\s*\(([^)]*)\)\s*\{([\s\S]*)\}$/;
         const arrowFunctionRegex = /^\s*(\(([^)]*)\)|[^=]+)\s*=>\s*([\s\S]+)$/;
-        const match = func.match(functionRegex) || func.match(arrowFunctionRegex);
-        if (!match) {
+        const functionMatch = func.match(functionRegex);
+        const arrowMatch = func.match(arrowFunctionRegex);
+        if (!functionMatch && !arrowMatch) {
             return func;
         }
-        const args = (_b = (_a = match[2]) === null || _a === void 0 ? void 0 : _a.split(',').map((arg) => arg.trim())) !== null && _b !== void 0 ? _b : [];
-        let body = match[3].trim();
-        if (!body.startsWith('{')) {
-            body = `{ return ${body}; }`;
+        let args;
+        let body;
+        if (functionMatch) {
+            args = (_b = (_a = functionMatch[2]) === null || _a === void 0 ? void 0 : _a.split(',').map((arg) => arg.trim()).filter(Boolean)) !== null && _b !== void 0 ? _b : [];
+            body = functionMatch[3].trim();
+        }
+        else {
+            args = (_d = (_c = arrowMatch[2]) === null || _c === void 0 ? void 0 : _c.split(',').map((arg) => arg.trim()).filter(Boolean)) !== null && _d !== void 0 ? _d : [];
+            body = arrowMatch[3].trim();
+            if (!body.startsWith('{')) {
+                body = `return ${body};`;
+            }
+            else {
+                body = body.slice(1, -1).trim();
+            }
         }
         try {
             return new Function(...args, body);
         }
         catch (e) {
-            console.error('Error converting string to function:', e);
+            console.error('PHPFlasher: Error converting string to function:', e);
             return func;
         }
     }
@@ -305,11 +513,12 @@ class Flasher extends AbstractPlugin {
         if (factory || !alias.includes('theme.')) {
             return;
         }
-        const view = this.themes.get(alias.replace('theme.', ''));
-        if (!view) {
+        const themeName = alias.replace('theme.', '');
+        const theme = this.themes.get(themeName);
+        if (!theme) {
             return;
         }
-        this.addPlugin(alias, new FlasherPlugin(view));
+        this.addPlugin(alias, new FlasherPlugin(theme));
     }
     resolvePluginAlias(alias) {
         alias = alias || this.defaultPlugin;
@@ -317,18 +526,47 @@ class Flasher extends AbstractPlugin {
     }
     addAssets(assets) {
         return __awaiter(this, void 0, void 0, function* () {
-            for (const { urls, nonce, type } of assets) {
-                for (const url of urls) {
-                    yield this.loadAsset(url, nonce, type);
+            try {
+                const styleAssets = assets.filter((asset) => asset.type === 'style');
+                const stylePromises = [];
+                for (const { urls, nonce, type } of styleAssets) {
+                    if (!(urls === null || urls === void 0 ? void 0 : urls.length)) {
+                        continue;
+                    }
+                    for (const url of urls) {
+                        if (!url || this.loadedAssets.has(url)) {
+                            continue;
+                        }
+                        stylePromises.push(this.loadAsset(url, nonce, type));
+                        this.loadedAssets.add(url);
+                    }
                 }
+                yield Promise.all(stylePromises);
+                const scriptAssets = assets.filter((asset) => asset.type === 'script');
+                for (const { urls, nonce, type } of scriptAssets) {
+                    if (!(urls === null || urls === void 0 ? void 0 : urls.length)) {
+                        continue;
+                    }
+                    for (const url of urls) {
+                        if (!url || this.loadedAssets.has(url)) {
+                            continue;
+                        }
+                        yield this.loadAsset(url, nonce, type);
+                        this.loadedAssets.add(url);
+                    }
+                }
+            }
+            catch (error) {
+                console.error('PHPFlasher: Error loading assets', error);
             }
         });
     }
     loadAsset(url, nonce, type) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (document.querySelector(`${type === 'style' ? 'link' : 'script'}[src="${url}"]`)) {
-                return;
-            }
+        const selector = type === 'style' ? `link[href="${url}"]` : `script[src="${url}"]`;
+        if (document.querySelector(selector)) {
+            return Promise.resolve();
+        }
+        return new Promise((resolve, reject) => {
             const element = document.createElement(type === 'style' ? 'link' : 'script');
             if (type === 'style') {
                 element.rel = 'stylesheet';
@@ -341,46 +579,98 @@ class Flasher extends AbstractPlugin {
             if (nonce) {
                 element.setAttribute('nonce', nonce);
             }
+            element.onload = () => resolve();
+            element.onerror = () => reject(new Error(`Failed to load ${url}`));
             document.head.appendChild(element);
-            return new Promise((resolve, reject) => {
-                element.onload = () => resolve();
-                element.onerror = () => reject(new Error(`Failed to load ${url}`));
-            });
         });
     }
     addThemeStyles(response, plugin) {
-        var _a;
         if (plugin !== 'flasher' && !plugin.includes('theme.')) {
             return;
         }
-        plugin = plugin.replace('theme.', '');
-        const styles = ((_a = this.themes.get(plugin)) === null || _a === void 0 ? void 0 : _a.styles) || [];
-        response.styles = Array.from(new Set([...response.styles, ...styles]));
+        const themeName = plugin.replace('theme.', '');
+        const theme = this.themes.get(themeName);
+        if (!(theme === null || theme === void 0 ? void 0 : theme.styles)) {
+            return;
+        }
+        const themeStyles = Array.isArray(theme.styles) ? theme.styles : [theme.styles];
+        response.styles = Array.from(new Set([...response.styles, ...themeStyles]));
     }
+}
+
+function getA11yAttributes(type) {
+    const isAlert = type === 'error' || type === 'warning';
+    return {
+        role: isAlert ? 'alert' : 'status',
+        ariaLive: isAlert ? 'assertive' : 'polite',
+        ariaAtomic: 'true',
+    };
+}
+function getA11yString(type) {
+    const attrs = getA11yAttributes(type);
+    return `role="${attrs.role}" aria-live="${attrs.ariaLive}" aria-atomic="${attrs.ariaAtomic}"`;
+}
+function getCloseButtonA11y(type) {
+    return `aria-label="Close ${type} message"`;
+}
+
+const CLASS_NAMES = {
+    container: 'fl-container',
+    wrapper: 'fl-wrapper',
+    content: 'fl-content',
+    message: 'fl-message',
+    title: 'fl-title',
+    text: 'fl-text',
+    icon: 'fl-icon',
+    iconWrapper: 'fl-icon-wrapper',
+    actions: 'fl-actions',
+    close: 'fl-close',
+    progressBar: 'fl-progress-bar',
+    progress: 'fl-progress',
+    show: 'fl-show',
+    sticky: 'fl-sticky',
+    rtl: 'fl-rtl',
+    type: (type) => `fl-${type}`,
+    theme: (name) => `fl-${name}`,
+};
+const DEFAULT_TITLES = {
+    success: 'Success',
+    error: 'Error',
+    warning: 'Warning',
+    info: 'Information',
+};
+function capitalizeType(type) {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+}
+function getTitle(title, type) {
+    return title || DEFAULT_TITLES[type] || capitalizeType(type);
 }
 
 const flasherTheme = {
     render: (envelope) => {
         const { type, title, message } = envelope;
-        const isAlert = type === 'error' || type === 'warning';
-        const role = isAlert ? 'alert' : 'status';
-        const ariaLive = isAlert ? 'assertive' : 'polite';
+        const displayTitle = getTitle(title, type);
         return `
-            <div class="fl-flasher fl-${type}" role="${role}" aria-live="${ariaLive}" aria-atomic="true">
-                <div class="fl-content">
-                    <div class="fl-icon"></div>
+            <div class="${CLASS_NAMES.theme('flasher')} ${CLASS_NAMES.type(type)}" ${getA11yString(type)}>
+                <div class="${CLASS_NAMES.content}">
+                    <div class="${CLASS_NAMES.icon}"></div>
                     <div>
-                        <strong class="fl-title">${title}</strong>
-                        <span class="fl-message">${message}</span>
+                        <strong class="${CLASS_NAMES.title}">${displayTitle}</strong>
+                        <span class="${CLASS_NAMES.message}">${message}</span>
                     </div>
-                    <button class="fl-close" aria-label="Close ${type} message">&times;</button>
+                    <button class="${CLASS_NAMES.close}" ${getCloseButtonA11y(type)}>&times;</button>
                 </div>
-                <span class="fl-progress-bar"></span>
+                <span class="${CLASS_NAMES.progressBar}">
+                    <span class="${CLASS_NAMES.progress}"></span>
+                </span>
             </div>`;
     },
 };
 
 const flasher = new Flasher();
 flasher.addTheme('flasher', flasherTheme);
+if (typeof window !== 'undefined') {
+    window.flasher = flasher;
+}
 
 export { flasher as default };

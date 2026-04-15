@@ -85,7 +85,7 @@ trait HasTranslations
 
         $translatableConfig = app(Translatable::class);
 
-        if (is_null(self::getAttributeFromArray($baseKey))) {
+        if (is_null($this->getAttributeFromArray($baseKey))) {
             $translation = null;
         } else {
             $translation = isset($translations[$normalizedLocale]) ? $translations[$normalizedLocale] : null;

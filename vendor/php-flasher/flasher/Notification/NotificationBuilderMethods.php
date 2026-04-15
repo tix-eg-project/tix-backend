@@ -39,6 +39,9 @@ trait NotificationBuilderMethods
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function options(array $options, bool $append = true): static
     {
         if ($append) {
@@ -86,6 +89,9 @@ trait NotificationBuilderMethods
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function translate(array $parameters = [], ?string $locale = null): static
     {
         $this->envelope->withStamp(new TranslationStamp($parameters, $locale));
@@ -100,6 +106,9 @@ trait NotificationBuilderMethods
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function context(array $context): static
     {
         $this->envelope->withStamp(new ContextStamp($context));
@@ -151,6 +160,9 @@ trait NotificationBuilderMethods
         return $this->envelope;
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     protected function validateCallableCondition(bool|\Closure $condition): bool
     {
         if ($condition instanceof \Closure) {
