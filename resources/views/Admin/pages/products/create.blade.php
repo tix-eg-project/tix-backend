@@ -9,39 +9,66 @@
             <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
                 @csrf
 
-                {{-- ====== Dynamic Translations (Name / Short / Long) ====== --}}
-                @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.name') }} ({{ strtoupper($localeCode) }})</label>
-                        <input type="text" name="name[{{ $localeCode }}]"
-                            class="form-control @error(" name.$localeCode") is-invalid @enderror"
-                            value="{{ old("name.$localeCode") }}">
-                        @error("name.$localeCode")
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+                {{-- ====== بيانات ووصف المنتج (Name / Short / Long) ====== --}}
+                <div class="mb-4">
+                    <h5 class="mb-3 text-primary border-bottom pb-2">
+                        <i class="bx bx-detail me-1"></i> {{ __('messages.product_details') ?? 'بيانات ووصف المنتج' }}
+                    </h5>
 
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.short_description') }}
-                            ({{ strtoupper($localeCode) }})</label>
-                        <textarea name="short_description[{{ $localeCode }}]"
-                            class="form-control ckeditor-desc @error(" short_description.$localeCode") is-invalid @enderror" rows="3">{{ old("short_description.$localeCode") }}</textarea>
-                        @error("short_description.$localeCode")
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    <ul class="nav nav-tabs mb-3" id="productDescTabs" role="tablist">
+                        @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                    id="desc-{{ $localeCode }}-tab" data-bs-toggle="tab"
+                                    data-bs-target="#desc-{{ $localeCode }}" type="button" role="tab"
+                                    aria-controls="desc-{{ $localeCode }}"
+                                    aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                    <i class="bx bx-world me-1"></i> {{ $locale['native'] ?? strtoupper($localeCode) }}
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
 
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.long_description') }}
-                            ({{ strtoupper($localeCode) }})</label>
-                        <textarea name="long_description[{{ $localeCode }}]"
-                            class="form-control ckeditor-desc @error(" long_description.$localeCode") is-invalid @enderror" rows="5">{{ old("long_description.$localeCode") }}</textarea>
-                        @error("long_description.$localeCode")
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
+                    <div class="tab-content border rounded p-4 bg-light" id="productDescTabsContent">
+                        @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
+                            <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                                id="desc-{{ $localeCode }}" role="tabpanel"
+                                aria-labelledby="desc-{{ $localeCode }}-tab">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('messages.name') }} <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" name="name[{{ $localeCode }}]"
+                                        class="form-control @error("name.$localeCode") is-invalid @enderror"
+                                        value="{{ old("name.$localeCode") }}"
+                                        placeholder="{{ __('messages.name') }} ({{ strtoupper($localeCode) }})">
+                                    @error("name.$localeCode")
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('messages.short_description') }}</label>
+                                    <textarea name="short_description[{{ $localeCode }}]"
+                                        class="form-control ckeditor-desc @error("short_description.$localeCode") is-invalid @enderror" rows="3"
+                                        placeholder="{{ __('messages.short_description') }} ({{ strtoupper($localeCode) }})">{{ old("short_description.$localeCode") }}</textarea>
+                                    @error("short_description.$localeCode")
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('messages.long_description') }}</label>
+                                    <textarea name="long_description[{{ $localeCode }}]"
+                                        class="form-control ckeditor-desc @error("long_description.$localeCode") is-invalid @enderror" rows="5">{{ old("long_description.$localeCode") }}</textarea>
+                                    @error("long_description.$localeCode")
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <hr class="my-4">
-                @endforeach
+                </div>
+                <hr class="my-4">
 
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -155,7 +182,8 @@
 
                     <div id="image-container">
                         <div class="input-group mb-2">
-                            <input type="file" name="images[]" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
+                            <input type="file" name="images[]" class="form-control"
+                                accept=".jpg,.jpeg,.png,.gif,.webp">
                             <button type="button" class="btn btn-success" onclick="addImageInput()">+</button>
                         </div>
                     </div>
@@ -169,61 +197,166 @@
 
                 {{-- ====== المميزات الرئيسية (لكل لغة) ====== --}}
                 <div class="mb-4">
-                    <h5 class="mb-3">{{ __('messages.key_features') ?? 'Key features' }}</h5>
-                    <p class="text-muted small">{{ __('messages.key_features_hint') ?? 'One bullet per line for each language.' }}</p>
-                    @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">{{ __('messages.key_features') ?? 'Key features' }} ({{ strtoupper($localeCode) }})</label>
-                            <div id="features-{{ $localeCode }}-wrap">
-                                <div class="input-group mb-2 feature-row">
-                                    <input type="text" name="features[{{ $localeCode }}][]" class="form-control" value="">
-                                    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.feature-row').remove()" title="×">×</button>
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <h5 class="text-success mb-0">
+                            <i class="bx bx-list-check me-1"></i> {{ __('messages.key_features') ?? 'المميزات الرئيسية' }}
+                        </h5>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        <i class="bx bx-info-circle me-1"></i>
+                        {{ __('messages.key_features_hint') ?? 'أضف ميزة واحدة في كل سطر لكل لغة للتركيز على أهم نقاط البيع للمنتج.' }}
+                    </p>
+
+                    <div class="row g-3">
+                        @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
+                            <div class="col-md-6">
+                                <div class="card shadow-none border h-100">
+                                    <div class="card-header bg-light py-2 border-bottom">
+                                        <h6 class="mb-0 fw-bold">
+                                            <i class="bx bx-world me-1 text-muted"></i>
+                                            {{ __('messages.key_features') ?? 'المميزات' }}
+                                            ({{ strtoupper($localeCode) }})
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div id="features-{{ $localeCode }}-wrap">
+                                            <div class="input-group mb-2 feature-row shadow-sm">
+                                                <span class="input-group-text bg-white"><i
+                                                        class="bx bx-check-circle text-success"></i></span>
+                                                <input type="text" name="features[{{ $localeCode }}][]"
+                                                    class="form-control border-start-0"
+                                                    placeholder="{{ __('messages.feature_placeholder') ?? 'مثال: بطارية تدوم 24 ساعة...' }}">
+                                                <button type="button" class="btn btn-outline-danger"
+                                                    onclick="this.closest('.feature-row').remove()"
+                                                    title="{{ __('messages.remove') ?? 'حذف' }}">
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-success mt-2 w-100 rounded-pill"
+                                            onclick="addFeatureRow('{{ $localeCode }}')">
+                                            <i class="bx bx-plus"></i> {{ __('messages.add_line') ?? 'إضافة ميزة أخرى' }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addFeatureRow('{{ $localeCode }}')">+ {{ __('messages.add_line') ?? 'Add line' }}</button>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
 
                 <hr class="my-4">
 
                 {{-- ====== الأسئلة الشائعة ====== --}}
                 <div class="mb-4">
-                    <h5 class="mb-3">{{ __('messages.faq') ?? 'FAQ' }}</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <h5 class="text-info mb-0">
+                            <i class="bx bx-conversation me-1"></i> {{ __('messages.faq') ?? 'الأسئلة والأجوبة (FAQ)' }}
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3"
+                            onclick="addFaqBlock()">
+                            <i class="bx bx-plus"></i> {{ __('messages.add_faq') ?? 'إضافة سؤال جديد' }}
+                        </button>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        <i class="bx bx-info-circle me-1"></i> أضف الأسئلة الشائعة التي قد يطرحها العملاء حول هذا المنتج مع
+                        إجاباتها.
+                    </p>
+
                     <div id="faq-container">
-                        <div class="border rounded p-3 mb-3 faq-block">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fw-semibold">{{ __('messages.faq') ?? 'FAQ' }} #1</span>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.faq-block').remove()">{{ __('messages.remove') ?? 'Remove' }}</button>
+                        <div class="card shadow-sm mb-4 faq-block border-info border-opacity-25">
+                            <div
+                                class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center py-2">
+                                <h6 class="fw-bold mb-0 text-info">
+                                    <i class="bx bx-help-circle me-1"></i> {{ __('messages.faq') ?? 'سؤال وجواب' }} <span
+                                        class="faq-number">#1</span>
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0;"
+                                    onclick="this.closest('.faq-block').remove()">
+                                    <i class="bx bx-x"></i>
+                                </button>
                             </div>
-                            @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
-                                <div class="mb-2"><label class="form-label small mb-1">{{ __('messages.question') ?? 'Question' }} ({{ strtoupper($localeCode) }})</label><input type="text" name="faqs[0][question][{{ $localeCode }}]" class="form-control"></div>
-                                <div class="mb-3"><label class="form-label small mb-1">{{ __('messages.answer') ?? 'Answer' }} ({{ strtoupper($localeCode) }})</label><textarea name="faqs[0][answer][{{ $localeCode }}]" class="form-control" rows="2"></textarea></div>
-                            @endforeach
+                            <div class="card-body p-3">
+                                <div class="row g-4">
+                                    @foreach (LaravelLocalization::getSupportedLocales() as $localeCode => $locale)
+                                        <div class="col-md-6 border-end-md {{ $loop->last ? 'border-0' : '' }}">
+                                            <h6 class="text-muted border-bottom pb-2 mb-3">
+                                                <i class="bx bx-world me-1"></i> {{ strtoupper($localeCode) }}
+                                            </h6>
+                                            <div class="mb-3">
+                                                <label
+                                                    class="form-label text-dark fw-semibold mb-1">{{ __('messages.question') ?? 'السؤال' }}</label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i
+                                                            class="bx bx-question-mark text-info"></i></span>
+                                                    <input type="text" name="faqs[0][question][{{ $localeCode }}]"
+                                                        class="form-control"
+                                                        placeholder="{{ __('messages.question_placeholder') ?? 'مثال: هل المنتج مقاوم للماء؟' }}">
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label
+                                                    class="form-label text-dark fw-semibold mb-1">{{ __('messages.answer') ?? 'الإجابة' }}</label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i
+                                                            class="bx bx-message-dots text-success"></i></span>
+                                                    <textarea name="faqs[0][answer][{{ $localeCode }}]" class="form-control" rows="2"
+                                                        placeholder="{{ __('messages.answer_placeholder') ?? 'نعم، المنتج مقاوم للماء حتى عمق...' }}"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFaqBlock()">+ {{ __('messages.add_faq') ?? 'Add FAQ' }}</button>
                 </div>
 
                 <hr class="my-4">
 
-                {{-- ====== المراجعات والتقييمات (Read Only) ====== --}}
+                {{-- ====== المراجعات والتعليقات (Read Only) ====== --}}
                 <div class="mb-4">
-                    <h5 class="mb-3">{{ __('messages.reviews') ?? 'Reviews' }}</h5>
-                    <div class="alert alert-info">
-                        <i class="bx bx-info-circle"></i>
-                        {{ __('messages.reviews_available_after_creation') ?? 'Reviews will be available after product creation.' }}
-                    </div>
-                </div>
-
-                <hr class="my-4">
-
-                {{-- ====== التعليقات (Read Only) ====== --}}
-                <div class="mb-4">
-                    <h5 class="mb-3">{{ __('messages.comments') ?? 'Comments' }}</h5>
-                    <div class="alert alert-info">
-                        <i class="bx bx-info-circle"></i>
-                        {{ __('messages.comments_available_after_creation') ?? 'Comments will be available after product creation.' }}
+                    <h5 class="mb-3 text-warning border-bottom pb-2">
+                        <i class="bx bx-message-square-detail me-1"></i>
+                        {{ __('messages.comments_and_reviews') ?? 'التعليقات والمراجعات' }}
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25 shadow-none h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center py-5">
+                                    <div class="mb-3">
+                                        <i class="bx bx-star fs-1 text-warning"></i>
+                                        <i class="bx bxs-star fs-1 text-warning"></i>
+                                        <i class="bx bx-star fs-1 text-warning"></i>
+                                    </div>
+                                    <h5 class="text-warning-emphasis fw-bold">
+                                        {{ __('messages.reviews') ?? 'المراجعات والتقييمات' }}</h5>
+                                    <p class="text-warning-emphasis small mb-0 mt-2 px-3">
+                                        <i class="bx bx-lock-alt me-1"></i>
+                                        {{ __('messages.reviews_available_after_creation') ?? 'التقييمات ستكون متاحة للعرض والإدارة بعد إنشاء المنتج بنجاح.' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div
+                                class="card bg-secondary bg-opacity-10 border-secondary border-opacity-25 shadow-none h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center py-5">
+                                    <div class="mb-3">
+                                        <i class="bx bx-comment-detail fs-1 text-secondary"></i>
+                                        <i class="bx bx-comment-dots fs-1 text-secondary ms-2"></i>
+                                    </div>
+                                    <h5 class="text-secondary-emphasis fw-bold">
+                                        {{ __('messages.comments') ?? 'التعليقات والمناقشات' }}</h5>
+                                    <p class="text-secondary-emphasis small mb-0 mt-2 px-3">
+                                        <i class="bx bx-lock-alt me-1"></i>
+                                        {{ __('messages.comments_available_after_creation') ?? 'التعليقات ستكون متاحة للعرض والإدارة بعد إنشاء المنتج بنجاح.' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -269,9 +402,14 @@
             const wrap = document.getElementById('features-' + locale + '-wrap');
             if (!wrap) return;
             const div = document.createElement('div');
-            div.className = 'input-group mb-2 feature-row';
-            div.innerHTML = '<input type="text" class="form-control" name="features[' + locale + '][]" value="">' +
-                '<button type="button" class="btn btn-outline-danger" onclick="this.closest(\'.feature-row\').remove()">×</button>';
+            div.className = 'input-group mb-2 feature-row shadow-sm';
+            div.innerHTML = `
+                <span class="input-group-text bg-white"><i class="bx bx-check-circle text-success"></i></span>
+                <input type="text" class="form-control border-start-0" name="features[${locale}][]" placeholder="{{ __('messages.feature_placeholder') ?? 'أدخل الميزة هنا...' }}">
+                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.feature-row').remove()" title="{{ __('messages.remove') ?? 'حذف' }}">
+                    <i class="bx bx-trash"></i>
+                </button>
+            `;
             wrap.appendChild(div);
         }
 
@@ -279,18 +417,67 @@
             const container = document.getElementById('faq-container');
             if (!container) return;
             const i = faqNextIndex++;
-            let html = '<div class="border rounded p-3 mb-3 faq-block">' +
-                '<div class="d-flex justify-content-between align-items-center mb-2">' +
-                '<span class="fw-semibold">{{ __('messages.faq') ?? 'FAQ' }} #' + (i + 1) + '</span>' +
-                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'.faq-block\').remove()">{{ __('messages.remove') ?? 'Remove' }}</button>' +
-                '</div>';
-            TIX_LOCALES.forEach(function(localeCode) {
+            let html = `
+                <div class="card shadow-sm mb-4 faq-block border-info border-opacity-25">
+                    <div class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center py-2">
+                        <h6 class="fw-bold mb-0 text-info">
+                            <i class="bx bx-help-circle me-1"></i> {{ __('messages.faq') ?? 'سؤال وجواب' }} <span class="faq-number">#${i + 1}</span>
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px; padding: 0;"
+                            onclick="this.closest('.faq-block').remove(); updateFaqNumbers();">
+                            <i class="bx bx-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-4">
+            `;
+
+            TIX_LOCALES.forEach(function(localeCode, index) {
                 const uc = String(localeCode).toUpperCase();
-                html += '<div class="mb-2"><label class="form-label small mb-1">{{ __('messages.question') ?? 'Question' }} (' + uc + ')</label><input type="text" class="form-control" name="faqs[' + i + '][question][' + localeCode + ']"></div>';
-                html += '<div class="mb-3"><label class="form-label small mb-1">{{ __('messages.answer') ?? 'Answer' }} (' + uc + ')</label><textarea class="form-control" rows="2" name="faqs[' + i + '][answer][' + localeCode + ']"></textarea></div>';
+                const isLast = index === TIX_LOCALES.length - 1;
+                const borderClass = isLast ? 'border-0' : 'border-end-md';
+                html += `
+                        <div class="col-md-6 ${borderClass}">
+                            <h6 class="text-muted border-bottom pb-2 mb-3">
+                                <i class="bx bx-world me-1"></i> ${uc}
+                            </h6>
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-semibold mb-1">{{ __('messages.question') ?? 'السؤال' }}</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="bx bx-question-mark text-info"></i></span>
+                                    <input type="text" name="faqs[${i}][question][${localeCode}]"
+                                        class="form-control"
+                                        placeholder="{{ __('messages.question_placeholder') ?? 'مثال: هل المنتج مقاوم للماء؟' }}">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label text-dark fw-semibold mb-1">{{ __('messages.answer') ?? 'الإجابة' }}</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="bx bx-message-dots text-success"></i></span>
+                                    <textarea name="faqs[${i}][answer][${localeCode}]" class="form-control" rows="2"
+                                        placeholder="{{ __('messages.answer_placeholder') ?? 'نعم، المنتج مقاوم للماء حتى عمق...' }}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                `;
             });
-            html += '</div>';
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
             container.insertAdjacentHTML('beforeend', html);
+            updateFaqNumbers();
+        }
+
+        function updateFaqNumbers() {
+            const blocks = document.querySelectorAll('.faq-block');
+            blocks.forEach((block, index) => {
+                const numSpan = block.querySelector('.faq-number');
+                if (numSpan) numSpan.textContent = '#' + (index + 1);
+            });
         }
     </script>
 
@@ -316,7 +503,7 @@
                     $sub.prop('disabled', true).empty()
                         .append(
                             `<option value="">${msg || '{{ __('messages.select_subcategory') ?? __('messages.select') }}'}</option>`
-                            );
+                        );
                 }
 
                 // عند تغيير القسم الرئيسي
@@ -335,16 +522,16 @@
                             if (items.length) {
                                 $sub.append(
                                     '<option value="" disabled selected hidden>-- {{ __('messages.select_subcategory') }} --</option>'
-                                    );
+                                );
                                 items.forEach(function(sub) {
                                     $sub.append(
                                         `<option value="${sub.id}">${sub.name}</option>`
-                                        );
+                                    );
                                 });
                                 // لو كان فيه قيمة قديمة (بعد فاليوديشن فاشل مثلاً)
                                 const oldSub =
                                     '{{ old('
-                                                            subcategory_id ') }}';
+                                                                                                                                    subcategory_id ') }}';
                                 if (oldSub) $sub.val(oldSub);
                                 $sub.prop('disabled', false);
                             } else {
@@ -359,7 +546,7 @@
 
                 // لو رجعنا من فاليوديشن وكان فيه category_id مختار مسبقًا
                 const oldCat = '{{ old('
-                        category_id ') }}';
+                                                        category_id ') }}';
                 if (oldCat) {
                     $cat.val(oldCat).trigger('change');
                 } else {

@@ -36,6 +36,14 @@ class StoreProductRequest extends FormRequest
             'offer_id'       => 'nullable|exists:offers,id',
 
             'status'        => 'nullable',
+            // في rules()
+'features'              => 'nullable|array',
+'features.*.key'        => 'nullable|string|max:255',
+'features.*.value'      => 'nullable|string|max:255',
+
+'faqs'                  => 'nullable|array',
+'faqs.*.question'       => 'nullable|string|max:500',
+'faqs.*.answer'         => 'nullable|string',
         ];
     }
 
@@ -43,6 +51,17 @@ class StoreProductRequest extends FormRequest
     {
         return [
             // الاسم
+            // في messages()
+'features.array'            => __('messages.features_array'),
+'features.*.key.string'     => __('messages.feature_key_string'),
+'features.*.key.max'        => __('messages.feature_key_max'),
+'features.*.value.string'   => __('messages.feature_value_string'),
+'features.*.value.max'      => __('messages.feature_value_max'),
+
+'faqs.array'                => __('messages.faqs_array'),
+'faqs.*.question.string'    => __('messages.faq_question_string'),
+'faqs.*.question.max'       => __('messages.faq_question_max'),
+'faqs.*.answer.string'      => __('messages.faq_answer_string'),
             'name.required'     => __('messages.name_required'),
             'name.array'        => __('messages.name_array'),
             'name.ar.required'  => __('messages.name_ar_required'),

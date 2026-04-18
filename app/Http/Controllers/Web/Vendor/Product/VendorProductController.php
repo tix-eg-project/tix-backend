@@ -91,8 +91,10 @@ class VendorProductController extends Controller
 
     public function store(StoreProductRequest $request)
     {
-        // الـ Service هيحط vendor_id تلقائيًا لو المستخدم Vendor
-        $this->productService->store($request->validated());
+        $data = $request->validated();
+        $data['vendor_id'] = $this->currentVendorId();
+
+        $this->productService->store($data);
 
         return redirect()
             ->route('vendor.products.index')

@@ -3,8 +3,21 @@
 return [
     'dashboard' => 'الرئيسيه',
 
-
-
+'comments_and_reviews'               => 'التعليقات والتقييمات',
+'reviews'                            => 'التقييمات',
+'comments'                           => 'التعليقات',
+'reviews_available_after_creation'   => 'ستتوفر التقييمات بعد إنشاء المنتج.',
+'comments_available_after_creation'  => 'ستتوفر التعليقات بعد إنشاء المنتج.',
+'key_features'          => 'المميزات الرئيسية',
+'key_features_hint'     => 'أضف المميزات الرئيسية لهذا المنتج.',
+'feature_placeholder'   => 'مثال: الوزن: 1.5 كيلو',
+'add_line'              => 'إضافة سطر',
+'faq'                   => 'الأسئلة الشائعة',
+'add_faq'               => 'إضافة سؤال',
+'question'              => 'السؤال',
+'answer'                => 'الجواب',
+'question_placeholder'  => 'مثال: هل المنتج يدعم الشحن السريع؟',
+'answer_placeholder'    => 'مثال: نعم، يدعم شحن 65 واط...',
 
     'register_success' => 'تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني.',
     'verify_code_failed' => 'رمز التحقق غير صحيح أو منتهي.',

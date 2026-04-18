@@ -2554,6 +2554,20 @@ return [
     'enter_name_en' => 'Enter Name (English)',
     'enter_shipping_price' => 'Enter Shipping Price',
 
-
+'key_features'          => 'Key Features',
+'key_features_hint'     => 'Add the main features of this product.',
+'feature_placeholder'   => 'e.g. Weight: 1.5 kg',
+'add_line'              => 'Add Line',
+'faq'                   => 'FAQ',
+'add_faq'               => 'Add FAQ',
+'question'              => 'Question',
+'answer'                => 'Answer',
+'question_placeholder'  => 'e.g. Does it support fast charging?',
+'answer_placeholder'    => 'e.g. Yes, supports 65W charging...',
+'comments_and_reviews'               => 'Comments & Reviews',
+'reviews'                            => 'Reviews',
+'comments'                           => 'Comments',
+'reviews_available_after_creation'   => 'Reviews will be available after product creation.',
+'comments_available_after_creation'  => 'Comments will be available after product creation.',
 
 ];

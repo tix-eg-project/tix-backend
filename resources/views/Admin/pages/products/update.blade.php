@@ -546,6 +546,14 @@
                 div.className = 'input-group mb-2 feature-row';
                 div.innerHTML = '<input type="text" class="form-control" name="features[' + locale + '][]" value="">' +
                     '<button type="button" class="btn btn-outline-danger" onclick="this.closest(\'.feature-row\').remove()">×</button>';
+                div.className = 'input-group mb-2 feature-row shadow-sm';
+                div.innerHTML = `
+                    <span class="input-group-text bg-white"><i class="bx bx-check-circle text-success"></i></span>
+                    <input type="text" class="form-control border-start-0" name="features[${locale}][]" placeholder="{{ __('messages.feature_placeholder') ?? 'أدخل الميزة هنا...' }}">
+                    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.feature-row').remove()" title="{{ __('messages.remove') ?? 'حذف' }}">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                `;
                 wrap.appendChild(div);
             }
 
@@ -559,6 +567,22 @@
                     '<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'.faq-block\').remove()">{{ __('messages.remove') ?? 'Remove' }}</button>' +
                     '</div>';
                 TIX_LOCALES.forEach(function(localeCode) {
+                let html = `
+                    <div class="card shadow-sm mb-4 faq-block border-info border-opacity-25">
+                        <div class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center py-2">
+                            <h6 class="fw-bold mb-0 text-info">
+                                <i class="bx bx-help-circle me-1"></i> {{ __('messages.faq') ?? 'سؤال وجواب' }} <span class="faq-number">#${i + 1}</span>
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px; padding: 0;"
+                                onclick="this.closest('.faq-block').remove(); updateFaqNumbers();">
+                                <i class="bx bx-x"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-4">
+                `;
+
+                TIX_LOCALES.forEach(function(localeCode, index) {
                     const uc = String(localeCode).toUpperCase();
                     html +=
                         '<div class="mb-2"><label class="form-label small mb-1">{{ __('messages.question') ?? 'Question' }} (' +
@@ -570,9 +594,51 @@
                         uc + ')</label>' +
                         '<textarea class="form-control" rows="2" name="faqs[' + i + '][answer][' + localeCode +
                         ']"></textarea></div>';
+                    const isLast = index === TIX_LOCALES.length - 1;
+                    const borderClass = isLast ? 'border-0' : 'border-end-md';
+                    html += `
+                            <div class="col-md-6 ${borderClass}">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="bx bx-world me-1"></i> ${uc}
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold mb-1">{{ __('messages.question') ?? 'السؤال' }}</label>
+                                    <div class="input-group input-group-merge">
+                                        <span class="input-group-text"><i class="bx bx-question-mark text-info"></i></span>
+                                        <input type="text" name="faqs[${i}][question][${localeCode}]"
+                                            class="form-control"
+                                            placeholder="{{ __('messages.question_placeholder') ?? 'مثال: هل المنتج مقاوم للماء؟' }}">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="form-label text-dark fw-semibold mb-1">{{ __('messages.answer') ?? 'الإجابة' }}</label>
+                                    <div class="input-group input-group-merge">
+                                        <span class="input-group-text"><i class="bx bx-message-dots text-success"></i></span>
+                                        <textarea name="faqs[${i}][answer][${localeCode}]" class="form-control" rows="2"
+                                            placeholder="{{ __('messages.answer_placeholder') ?? 'نعم، المنتج مقاوم للماء حتى عمق...' }}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                    `;
                 });
                 html += '</div>';
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
                 container.insertAdjacentHTML('beforeend', html);
+                updateFaqNumbers();
+            }
+
+            function updateFaqNumbers() {
+                const blocks = document.querySelectorAll('.faq-block');
+                blocks.forEach((block, index) => {
+                    const numSpan = block.querySelector('.faq-number');
+                    if (numSpan) numSpan.textContent = '#' + (index + 1);
+                });
             }
 
             (function() {
@@ -616,6 +682,17 @@
                 div.appendChild(removeBtn);
                 container.appendChild(div);
             }
+        </script>
+
+        <!-- CKEditor Initialization -->
+        <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const editors = document.querySelectorAll('.ckeditor-desc');
+                editors.forEach(editor => {
+                    CKEDITOR.replace(editor, { language: 'ar', removePlugins: 'exportpdf' });
+                });
+            });
         </script>
     @endpush
 @endsection

@@ -51,7 +51,8 @@
 
                         <div class="mb-3">
                             <label class="form-label">{{ __('messages.short_description') }}
-                                ({{ strtoupper($localeCode) }})</label>
+                                ({{ strtoupper($localeCode) }})
+                            </label>
                             <textarea name="short_description[{{ $localeCode }}]"
                                 class="form-control ckeditor-desc @error('short_description.' . $localeCode) is-invalid @enderror" rows="3">{{ old('short_description.' . $localeCode) }}</textarea>
                             @error('short_description.' . $localeCode)
@@ -381,7 +382,7 @@
                             if (items.length) {
                                 $sub.append(
                                     `<option value="" disabled selected hidden>-- ${@json(__('messages.select_subcategory'))} --</option>`
-                                    );
+                                );
                                 items.forEach(sc => $sub.append(
                                     `<option value="${sc.id}">${sc.name}</option>`));
                                 if (preselectId) $sub.val(String(preselectId));

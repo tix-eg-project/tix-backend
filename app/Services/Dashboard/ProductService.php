@@ -29,8 +29,8 @@ class ProductService
                 continue;
             }
             $clean[$locale] = array_values(array_filter(
-                array_map(static fn ($x) => trim((string) $x), $lines),
-                static fn ($x) => $x !== ''
+                array_map(static fn($x) => trim((string) $x), $lines),
+                static fn($x) => $x !== ''
             ));
         }
 
@@ -74,9 +74,10 @@ class ProductService
     /** في سياق الفندور فقط (route name يبدأ بـ vendor.) */
     private function vendorContextId(): ?int
     {
-        return (request()->routeIs('vendor.*') && Auth::guard('vendor')->check())
-            ? (int) Auth::guard('vendor')->id()
-            : null;
+        if (request()->routeIs('vendor.*')) {
+            return auth('vendor')->id() ?? auth()->id();
+        }
+        return null;
     }
 
     public function store(array $data): Product
@@ -101,7 +102,7 @@ class ProductService
             'brand_id'          => $data['brand_id'] ?? null,
 
             // 🔒 لو مش سياق فندور => دايمًا null (حتى لو حد بعت vendor_id في الريكوست)
-            'vendor_id'         => $vendorId ?? null,
+            'vendor_id'         => $vendorId ?? ($data['vendor_id'] ?? null),
 
             'status'            => $data['status'] ?? Status::Active,
         ];
