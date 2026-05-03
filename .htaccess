@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteBase /
+RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
+RewriteRule ^ %1 [L,NE,R=302]
+RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
+<Files .env>
+    order allow,deny
+    Deny from all
+</Files>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
